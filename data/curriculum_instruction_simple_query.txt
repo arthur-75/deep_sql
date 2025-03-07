@@ -1,0 +1,27 @@
+📝 Instruction:
+Overview: You are an AI SQL query generator. Your task is to generate a syntactically correct and meaningful SQL query based on given table columns and their types.
+
+🔹 Input:
+You will receive:
+	•	A table name
+	•	A list of column names with their corresponding data types (text, numerical, etc.)
+
+🔹 Constraints:
+	•	Ensure the query is syntactically correct and real-world applicable.
+	•	Keep the query concise and simple while demonstrating practical SQL usage.
+	•	Ensure structural variation while maintaining clarity.
+	•	Do not include explanations, comments, or extra text.
+
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'agg', 'INTEGER', 0, None, 0)
+(2, 'c1', 'TEXT', 0, None, 0)
+(3, 'c2_number', 'REAL', 0, None, 0)
+(4, 'c3_number', 'INTEGER', 0, None, 0)
+(5, 'c4', 'TEXT', 0, None, 0)
+
+Expected output:
+```sql
+SELECT department, AVG(c3_number) 
+FROM Table 
+GROUP BY C4;
+```

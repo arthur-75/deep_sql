@@ -51,7 +51,8 @@ def main():
     with open(data_args.curriculum_instruction, "r", encoding="utf-8") as file:
         curriculum_instruction = file.read()
 
-
+    with open(data_args.iterative_instruction, "r", encoding="utf-8") as file:
+        iterative_instruction = file.read()
 
 
     for i in range(training_args.num_iterations):
@@ -59,18 +60,19 @@ def main():
         logger.info(f"\n"*11)
         logger.info(f"🔄 Iteration {i+1}/{training_args.num_iterations}")
 
-
+        curriculum_error_history = []  # Historique des erreurs des requêtes précédentes
+        iterative_error_history = []  # Historique des erreurs des requêtes précédentes
 
         # Étape 1: Récupérer les informations de la table et l'état actuel de la bibliothèque
         state = sql_library.get_sql(random_=True, num_q=2)
         logger.info(f"Library State : {state}\n\n")
-        error_history = []  # Historique des erreurs des requêtes précédentes
+        
         table_description, table_path = table_manager.get_random_table_info()
         logger.info(f"table {table_path}, table_description {table_description}\n\n")
 
 
         # Étape 2: Générer la requête SQL
-        new_sql_template = curriculum_agent.generate_query_template(curriculum_instruction, state, error_history, table_description)
+        new_sql_template = curriculum_agent.generate_query_template(curriculum_instruction, state, curriculum_error_history, table_description)
         logger.info(f"✅ Requête SQL générée : {new_sql_template}\n\n")
 
 
@@ -85,12 +87,22 @@ def main():
 
         # Étape 5: Vérifier la différence si faill -> Etape 2 avec error_history
         
+
         # Étape 6: Création de la fonction python
-        python_code = f"print('hellow world')"
+        
+        if training_args.iterative_prompting: # Si l'itération est activée
+            python_code = iterative_agent.generate_python_function(iterative_instruction, new_sql_template, iterative_error_history)
+            
 
-        # Étape 7: Execution de la fonction python
 
-        # Étape 8: Stockage de la requête SQL validée
+        # Étape 7: Execution de la fonction python si faill -> Etape 6 avec error_history
+
+
+        # Étape 8: Stockage de la requête SQL validée 
+
+
+        if not training_args.iterative_prompting:
+            python_code = f"print('hellow world')"
         sql_library.add_query(new_sql_template, python_func=python_code, save=True)
         logger.info(f"✅ Requête stockée avec succès !")
 

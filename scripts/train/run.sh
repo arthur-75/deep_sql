@@ -20,3 +20,5 @@ python ../run.py \
   --output_dir ../models/-/ALL \
   --num_iterations 111 \
   --curriculum_model llama3.2 \
+  --iterative_prompting 1 \
+  --curriculum_instruction ../data/curriculum_instruction_simple_query.txt

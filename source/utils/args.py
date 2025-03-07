@@ -53,6 +53,11 @@ class DataArguments:
         default="../data/curriculum_instruction.txt",
         metadata={"help": "The path to the curriculum instruction file."},
     )
+    
+    iterative_instruction: Optional[str] = field(
+        default="../data/iterative_instruction.txt",
+        metadata={"help": "The path to the iterative instruction file."},
+    )
 
 
 @dataclass
@@ -65,6 +70,10 @@ class TrainingArguments:
         metadata={"help": "The number of iterations for the exploration loop."},
     )
 
+    iterative_prompting: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Use iterative prompting."},
+    )
 
 def __post_init__(self):
 
