@@ -39,8 +39,6 @@ class TableManager:
 
         :return: The file path of the selected table.
         """
-        if not self.table_paths:
-            raise ValueError("No tables found in the database directory.")
         
         return random.choice(self.table_paths)
 
@@ -80,8 +78,7 @@ class TableManager:
 
         :return: Formatted table schema description.
         """
-        try:
-            table_path = self.get_random_table()
-            return self.get_table_info(table_path), table_path
-        except Exception as e:
-            return f"❌ Error retrieving table info: {e}"
+
+
+        table_path = self.get_random_table()
+        return self.get_table_info(table_path), table_path

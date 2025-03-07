@@ -1,8 +1,9 @@
 import ollama
 from source.library.utils import extract_sql_from_text
+import json
 
 class CurriculumAgent:
-    def __init__(self, model_name: str, library: object):
+    def __init__(self, model_name: str):
         """
         Initialise l'agent de curriculum learning.
         
@@ -10,10 +11,9 @@ class CurriculumAgent:
         :param library: Instance de la bibliothèque stockant les requêtes SQL.
         """
         self.model_name = model_name
-        self.library = library
         self.message = None
 
-    def generate_query_template(self, instruction: str, state: dict, error_history: list, table_description: str) -> str:
+    def generate_query_template(self, instructions: str, state: dict, error_history: list, table_description: str) -> str:
         """
         Génère un nouveau template SQL basé sur l'état actuel du curriculum.
         
@@ -22,9 +22,9 @@ class CurriculumAgent:
         :param error_history: Historique des erreurs de génération.
         :return: Nouveau template SQL sous forme de chaîne de caractères.
         """
-        # TODO: Implémenter la logique avec LLM
-        if not self.message:
-            self.message = self.prepare_prompt(instruction, state, error_history, table_description)
+
+
+        self.message = self.prepare_prompt(instructions, state, error_history, table_description)
 
         print(f"***CURRICULUM PROMPT***\n\n {self.message[0]['content']}\n\n\n")
 
@@ -38,7 +38,6 @@ class CurriculumAgent:
         #query = extract_sql_from_text(query)
             
         return query
-
 
 
 

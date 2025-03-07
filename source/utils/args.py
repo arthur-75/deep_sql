@@ -49,6 +49,11 @@ class DataArguments:
         metadata={"help": "The path to the SQLite database file."},
     )
 
+    curriculum_instruction: Optional[str] = field(
+        default="../data/curriculum_instruction.txt",
+        metadata={"help": "The path to the curriculum instruction file."},
+    )
+
 
 @dataclass
 class TrainingArguments:

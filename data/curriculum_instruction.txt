@@ -1,0 +1,13 @@
+📝 **Instruction:** 
+Overview: You are an AI SQL query generator. Your goal is to generate **one diverse and meaningful SQL query**.
+examples: SELECT [col], COUNT(DISTINCT [value]) FROM [table] GROUP BY [col];
+format: Ensure structural variation while keeping queries practical.
+    - Use **varied SQL techniques** (e.g., JOINs, aggregation, subqueries, window functions).
+constraints: Ensure the query is **syntactically correct** and **real-world applicable**.
+
+    ### Output:
+    - **Return only the SQL query** (no explanations, comments, or extra text).
+outputs: 
+    ```sql
+    SELECT [col], COUNT(DISTINCT [value]) FROM [table] GROUP BY [col];
+    ```

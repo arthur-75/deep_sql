@@ -16,6 +16,7 @@ class SQLExecutor:
         :param query: La requête SQL à exécuter.
         :return: Un dictionnaire contenant le statut et les résultats.
         """
+        print(f"Starting Execution of : {query}, for the table {self.db_path}")
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -23,6 +24,10 @@ class SQLExecutor:
             result = cursor.fetchall()
             conn.commit()
             conn.close()
+
+            print(f"Result output : {result}")
             return {"success": True, "result": result}
         except Exception as e:
             return {"success": False, "error": str(e)}
+        
+

@@ -67,20 +67,19 @@ class SQLLibrary:
         """
 
 
-        if False:
-            embedding_vec = self.compute_embedding(sql)
-            
-            print(f"Embedding vector shape {embedding_vec.shape} : {embedding_vec}\n\n")
-            self.storage[len(self.storage)] = {
-                "sql" : sql,
-                "embedding": embedding_vec,
-                "python_func": python_func
-            }
-            self.vect_index.add(embedding_vec)
-            if save or len(self.storage)%100==0:
-                self.save()
-        else:
-            pass
+       
+        embedding_vec = self.compute_embedding(sql)
+        
+        print(f"Embedding vector shape {embedding_vec.shape} : {embedding_vec}\n\n")
+        self.storage[len(self.storage)] = {
+            "sql" : sql,
+            "embedding": embedding_vec,
+            "python_func": python_func
+        }
+        self.vect_index.add(embedding_vec)
+        if save or len(self.storage)%100==0:
+            self.save()
+        return None
 
     
 

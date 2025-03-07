@@ -17,4 +17,6 @@ unset OLLAMA_LOG_LEVEL
 unset OLLAMA_VERBOSE
 
 python ../run.py \
-  --output_dir ../models/T2_M5_CPE_B1_E0/ALL \
+  --output_dir ../models/-/ALL \
+  --num_iterations 111 \
+  --curriculum_model llama3.2 \
