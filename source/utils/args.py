@@ -14,6 +14,15 @@ class ModelArguments:
             metadata={"help": "The output directory where the model predictions and checkpoints will be written."},
         )
 
+    curriculum_model: Optional[str] = field(
+        default="llama3.2",
+        metadata={"help": "The model checkpoint for the curriculum learning agent."},
+    )
+
+    iterative_model: Optional[str] = field(
+        default="llama3.2",
+        metadata={"help": "The model checkpoint for the iterative prompting agent."},
+    )
 
 @dataclass
 class DataArguments:
@@ -25,18 +34,20 @@ class DataArguments:
         metadata={"help": "The path to the SQL library file."},
     )
 
+    database_path: Optional[str] = field(
+        default='database.db',
+        metadata={"help": "The path to the SQLite database file."},
+    )
+
 
 @dataclass
 class TrainingArguments:
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
-    test: Optional[int] = field(
-        default=5,
-        metadata={
-            "help": "Number of beams to use for evaluation. This argument will be passed to ``model.generate``, "
-                    "which is used during ``evaluate`` and ``predict``."
-        },
+    num_iterations: Optional[int] = field(
+        default=1,
+        metadata={"help": "The number of iterations for the exploration loop."},
     )
 
 

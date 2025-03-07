@@ -3,7 +3,7 @@
 import sqlite3
 
 
-def get_table_info(database_name:str='database.sqlite')-> str:
+def get_random_table_info(database_name:str='database.sqlite')-> str:
     """
     return description of dataset
     """

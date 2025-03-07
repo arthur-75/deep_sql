@@ -4,10 +4,8 @@
 import os
 import json
 import random
-import numpy as np
-import pandas as pd
-from typing import List, Dict, Any, Optional
-import time
+from typing import List
+import faiss
 
 
 class SQLLibrary:

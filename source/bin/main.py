@@ -8,10 +8,12 @@ from source.executors.sql_executor import SQLExecutor
 from source.executors.python_executor import execute_python_code
 from source.library.storage import SQLLibrary
 from source.library.retrieval import retrieve_similar_queries
+from source.library.utils import get_random_table_info
 import numpy as np
 
 from source.utils.args import  ModelArguments, DataArguments, TrainingArguments
 from transformers import HfArgumentParser
+
 
 # Initialisation du logger
 logger = setup_logger()
@@ -34,7 +36,7 @@ def main():
     iterative_agent = IterativePromptingAgent(model_name=model_args.iterative_model)
 
     # Initialisation des exécutants
-    sql_executor = SQLExecutor(db_path=data_args.dataset_path)
+    sql_executor = SQLExecutor(db_path=data_args.database_path)
 
     # Boucle principale d'exploration des requêtes SQL
     num_iterations =training_args.num_iterations
@@ -42,11 +44,16 @@ def main():
     for i in range(num_iterations):
         logger.info(f"🔄 Iteration {i+1}/{num_iterations}")
 
-        # Étape 1: Génération d'une nouvelle requête SQL avec Curriculum Learning
         instruction = "Générer une requête SQL plus complexe en suivant le curriculum."
-        state = sql_library.get_queries()
+        state = sql_library.get_sql(random_=True, num_q=2)
+        print(state)
+
+
         error_history = []  # Historique des erreurs des requêtes précédentes
-        new_sql_template = curriculum_agent.generate_query_template(instruction, state, error_history)
+
+        table_description = get_random_table_info(path_table)
+
+        new_sql_template = curriculum_agent.generate_query_template(instruction, state, error_history, table_description)
 
         logger.info(f"✅ Requête SQL générée : {new_sql_template}")
 
