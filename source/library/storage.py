@@ -62,24 +62,21 @@ class SQLLibrary:
         return selected_sql
 
     def add_query(self, sql: str, python_func:str=None,save:bool=False)-> None:
-        """
-        Add a new skill to the library with minimal info (only SQL).
-        """
+        if False:
 
+            embedding_vec = self.compute_embedding(sql)
+            
+            print(f"Embedding vector shape {embedding_vec.shape} : {embedding_vec}\n\n")
+            self.storage[len(self.storage)] = {
+                "sql" : sql,
+                "embedding": embedding_vec,
+                "python_func": python_func
+            }
+            self.vect_index.add(embedding_vec)
+            if save or len(self.storage)%100==0:
+                self.save()
+            return None
 
-       
-        embedding_vec = self.compute_embedding(sql)
-        
-        print(f"Embedding vector shape {embedding_vec.shape} : {embedding_vec}\n\n")
-        self.storage[len(self.storage)] = {
-            "sql" : sql,
-            "embedding": embedding_vec,
-            "python_func": python_func
-        }
-        self.vect_index.add(embedding_vec)
-        if save or len(self.storage)%100==0:
-            self.save()
-        return None
 
     
 

@@ -85,7 +85,6 @@ def main():
 
         # Étape 5: Vérifier la différence si faill -> Etape 2 avec error_history
         
-
         # Étape 6: Création de la fonction python
         python_code = f"print('hellow world')"
 
