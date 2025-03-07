@@ -61,19 +61,30 @@ class SQLLibrary:
         
         return selected_sql
 
-    def add_query(self, sql: str, embedding_vec: List[float],python_func:str=None,save:bool=False)-> None:
+    def add_query(self, sql: str, python_func:str=None,save:bool=False)-> None:
         """
         Add a new skill to the library with minimal info (only SQL).
         """
-        self.storage[len(self.storage)] = {
-            "sql" : sql,
-            "embedding": embedding_vec,
-            "python_func": python_func
-        }
-        self.vect_index.add(embedding_vec)
-        if save or len(self.storage)%100==0:
-            self.save()
+
+
+        if False:
+            embedding_vec = self.compute_embedding(sql)
+            
+            print(f"Embedding vector shape {embedding_vec.shape} : {embedding_vec}\n\n")
+            self.storage[len(self.storage)] = {
+                "sql" : sql,
+                "embedding": embedding_vec,
+                "python_func": python_func
+            }
+            self.vect_index.add(embedding_vec)
+            if save or len(self.storage)%100==0:
+                self.save()
+        else:
+            pass
+
     
+
+
     def get_queries(self, embedding_vec: List[float], top_k: int = 10, throushold:int=.9,) -> List[str]:
         """
         Return up to top_k skill names sorted by similarity (desc).

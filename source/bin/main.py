@@ -50,11 +50,10 @@ def main():
         prompts = json.load(json_file)
     
 
-    # Boucle principale d'exploration des requêtes SQL
-    num_iterations =training_args.num_iterations
     
-    for i in range(num_iterations):
-        logger.info(f"🔄 Iteration {i+1}/{num_iterations}")
+    for i in range(training_args.num_iterations):
+        logger.info(f"🔄 Iteration {i+1}/{training_args.num_iterations}")
+
 
         state = sql_library.get_sql(random_=True, num_q=2)
         logger.info(f"Library State : {state}\n\n")
@@ -79,29 +78,19 @@ def main():
             continue
 
 
-
         # Étape 3: Exécution de la fonction Python associée (si besoin)
-        python_code = f"# Simule une transformation de requête SQL\nprint('{new_sql_template}')"
-        python_execution_result = execute_python_code(python_code)
+        python_code = f"print('hellow world')"
+    
 
-        if not python_execution_result["success"]:
-            logger.warning(f"❌ Erreur d'exécution Python : {python_execution_result['error']}")
-            continue
+        # Étape 4: vérifier similarité
 
+        # Étape 5: Vérifier la différence
 
-        # Étape 5: Vérification de la similarité avec les requêtes existantes
-        query_vector = np.random.rand(768)  # Simule l'encodage de la requête en vecteur
-        library_vectors = [np.random.rand(768) for _ in sql_library.get_queries().keys()]
-
-        similar_queries = retrieve_similar_queries(query_vector, library_vectors)
-
-        if similar_queries:
-            logger.info(f"⚠️ La requête est trop similaire à d'autres. On passe à la suivante.")
-            continue
 
         # Étape 6: Stockage de la requête SQL validée
-        sql_library.add_query(new_sql_template, "Python function placeholder")
+        sql_library.add_query(new_sql_template, python_func=python_code, save=True)
         logger.info(f"✅ Requête stockée avec succès !")
+
 
     logger.info("🎉 Fin du processus SQLExplore.")
 
