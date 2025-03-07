@@ -1,4 +1,4 @@
-from sklearn.metrics.pairwise import cosine_similarity
+
 import numpy as np
 
 def retrieve_similar_queries(new_query_vector: np.ndarray, library_vectors: list, threshold: float = 0.8) -> list:

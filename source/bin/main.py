@@ -1,10 +1,8 @@
 import os
 import yaml
-from source.utils.args_utils import parse_arguments
-from source.utils.logging import setup_logger
+from source.utils.logger import setup_logger
 from source.agents.curriculum import CurriculumAgent
 from source.agents.iterative import IterativePromptingAgent
-from source.agents.feedback import analyze_feedback
 from source.executors.sql_executor import SQLExecutor
 from source.executors.python_executor import execute_python_code
 from source.library.storage import SQLLibrary
@@ -12,22 +10,9 @@ from source.library.retrieval import retrieve_similar_queries
 import numpy as np
 
 # Initialisation du logger
-logger = setup_logger("SQLExplore")
+logger = setup_logger()
 
-def load_config(config_path: str) -> dict:
-    """
-    Charge la configuration depuis un fichier YAML.
-    
-    :param config_path: Chemin du fichier de configuration.
-    :return: Dictionnaire contenant la configuration.
-    """
-    try:
-        with open(config_path, "r") as file:
-            config = yaml.safe_load(file)
-        return config
-    except Exception as e:
-        logger.error(f"Erreur lors du chargement de la configuration : {e}")
-        exit(1)
+
 
 def main():
 
@@ -38,7 +23,7 @@ def main():
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     
     # Initialisation de la bibliothèque SQL
-    sql_library = SQLLibrary()
+    sql_library = SQLLibrary(data_args.library_path)
 
     # Initialisation des agents LLM
     curriculum_agent = CurriculumAgent(model_name=config["llm"]["model"], library=sql_library)
