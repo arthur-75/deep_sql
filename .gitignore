@@ -1,0 +1,58 @@
+# 🛑 General Python Ignore Rules
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.DS_Store
+
+# 📦 Virtual Environments
+venv/
+.env/
+*.venv
+*.env
+
+# 🔧 Config & Logs
+config/settings.yaml  # Ignore personal/local configuration files
+*.log                 # Ignore log files
+logs/
+debug.log
+nohup.out
+
+# 📊 Datasets
+datasets/raw/
+datasets/processed/
+
+# 🔍 Machine Learning & Model Files
+models/
+*.ckpt
+*.pt
+*.h5
+*.onnx
+*.tflite
+
+# 🔒 Secrets & Credentials
+.env
+*.pem
+*.key
+*.crt
+*.pfx
+
+# 📂 IDE & Editor Specific Files
+.vscode/
+.idea/
+*.iml
+
+# 🐳 Docker & Container Files
+docker-compose.override.yml
+*.dockerfile
+
+# 📝 Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# 📜 Cache & Temporary Files
+cache/
+*.tmp
+*.bak
+*.log
