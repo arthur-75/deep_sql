@@ -1,5 +1,6 @@
 import os
-import yaml
+import sys
+
 from source.utils.logger import setup_logger
 from source.agents.curriculum import CurriculumAgent
 from source.agents.iterative import IterativePromptingAgent
@@ -9,6 +10,9 @@ from source.library.storage import SQLLibrary
 from source.library.retrieval import retrieve_similar_queries
 import numpy as np
 
+from source.utils.args import  ModelArguments, DataArguments, TrainingArguments
+from transformers import HfArgumentParser
+
 # Initialisation du logger
 logger = setup_logger()
 
@@ -16,7 +20,7 @@ logger = setup_logger()
 
 def main():
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    parser = HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
@@ -26,14 +30,14 @@ def main():
     sql_library = SQLLibrary(data_args.library_path)
 
     # Initialisation des agents LLM
-    curriculum_agent = CurriculumAgent(model_name=config["llm"]["model"], library=sql_library)
-    iterative_agent = IterativePromptingAgent(model_name=config["llm"]["model"])
+    curriculum_agent = CurriculumAgent(model_name=model_args.curriculum_model, library=sql_library)
+    iterative_agent = IterativePromptingAgent(model_name=model_args.iterative_model)
 
     # Initialisation des exécutants
-    sql_executor = SQLExecutor(db_path=config["database"]["path"])
+    sql_executor = SQLExecutor(db_path=data_args.dataset_path)
 
     # Boucle principale d'exploration des requêtes SQL
-    num_iterations = config["iterations"]
+    num_iterations =training_args.num_iterations
     
     for i in range(num_iterations):
         logger.info(f"🔄 Iteration {i+1}/{num_iterations}")
