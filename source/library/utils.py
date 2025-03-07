@@ -1,15 +1,13 @@
+import re
 
-
-import sqlite3
-
-
-def get_random_table_info(database_name:str='database.sqlite')-> str:
+def extract_sql_from_text(text: str) -> str:
     """
-    return description of dataset
+    Extracts SQL code enclosed within triple backticks from a given text.
+
+    :param text: The input string containing SQL code.
+    :return: Extracted SQL query as a string, or an empty string if no SQL is found.
     """
-    conn = sqlite3.connect(database_name)
-    cursor = conn.cursor()
-    table_name=cursor.execute("SELECT name FROM sqlite_master").fetchall()[0][0]
-    columns_info = cursor.execute(f"PRAGMA table_info({table_name});").fetchall()
-    table_description=f"Table name :{table_name}\n(column_index, column_name, data_type, not_null, default_value, primary_key)\n{columns_info}"
-    return table_description
+    pattern = r"```sql\s*(.*?)\s*```"
+    match = re.search(pattern, text, re.DOTALL)  # DOTALL makes '.' match newlines
+    
+    return match.group(1).strip() if match else ""

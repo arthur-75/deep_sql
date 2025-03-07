@@ -7,5 +7,14 @@
 #SBATCH --constraint=A6000
 #SBATCH --output=train/results/run.out
 
+
+export NO_PROXY="127.0.0.1,localhost"
+export no_proxy="127.0.0.1,localhost"
+
+
+unset OLLAMA_DEBUG
+unset OLLAMA_LOG_LEVEL
+unset OLLAMA_VERBOSE
+
 python ../run.py \
   --output_dir ../models/T2_M5_CPE_B1_E0/ALL \

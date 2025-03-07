@@ -35,7 +35,7 @@ class DataArguments:
     )
 
     database_path: Optional[str] = field(
-        default='database.db',
+        default='../data/tables/db',
         metadata={"help": "The path to the SQLite database file."},
     )
 

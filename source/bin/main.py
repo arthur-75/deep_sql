@@ -7,13 +7,20 @@ from source.agents.iterative import IterativePromptingAgent
 from source.executors.sql_executor import SQLExecutor
 from source.executors.python_executor import execute_python_code
 from source.library.storage import SQLLibrary
+from source.library.tables import TableManager
 from source.library.retrieval import retrieve_similar_queries
-from source.library.utils import get_random_table_info
 import numpy as np
 
 from source.utils.args import  ModelArguments, DataArguments, TrainingArguments
 from transformers import HfArgumentParser
 
+
+
+
+# Unset potential debug variables for Ollama
+os.environ.pop("OLLAMA_DEBUG", None)
+os.environ.pop("OLLAMA_LOG_LEVEL", None)
+os.environ.pop("OLLAMA_VERBOSE", None)
 
 # Initialisation du logger
 logger = setup_logger()
@@ -30,13 +37,14 @@ def main():
     
     # Initialisation de la bibliothèque SQL
     sql_library = SQLLibrary(data_args.library_path)
+    table_manager = TableManager(data_args.database_path)
 
     # Initialisation des agents LLM
     curriculum_agent = CurriculumAgent(model_name=model_args.curriculum_model, library=sql_library)
     iterative_agent = IterativePromptingAgent(model_name=model_args.iterative_model)
 
     # Initialisation des exécutants
-    sql_executor = SQLExecutor(db_path=data_args.database_path)
+    
 
     # Boucle principale d'exploration des requêtes SQL
     num_iterations =training_args.num_iterations
@@ -46,23 +54,28 @@ def main():
 
         instruction = "Générer une requête SQL plus complexe en suivant le curriculum."
         state = sql_library.get_sql(random_=True, num_q=2)
-        print(state)
+        logger.info(f"Library State : {state}\n\n")
 
 
         error_history = []  # Historique des erreurs des requêtes précédentes
 
-        table_description = get_random_table_info(path_table)
+        table_description, table_path = table_manager.get_random_table_info()
 
         new_sql_template = curriculum_agent.generate_query_template(instruction, state, error_history, table_description)
 
-        logger.info(f"✅ Requête SQL générée : {new_sql_template}")
+        logger.info(f"✅ Requête SQL générée : {new_sql_template}\n\n")
 
-        # Étape 2: Exécution de la requête SQL
+
+        sql_executor = SQLExecutor(table_path)
         sql_execution_result = sql_executor.execute_query(new_sql_template)
+
+
 
         if not sql_execution_result["success"]:
             logger.warning(f"❌ Erreur SQL détectée : {sql_execution_result['error']}")
             continue
+
+
 
         # Étape 3: Exécution de la fonction Python associée (si besoin)
         python_code = f"# Simule une transformation de requête SQL\nprint('{new_sql_template}')"

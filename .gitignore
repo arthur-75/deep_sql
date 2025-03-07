@@ -56,3 +56,15 @@ cache/
 *.tmp
 *.bak
 *.log
+
+
+
+# 🗄️ Database & Data Files
+data/squall/          # Ignore entire Squall database directory
+data/squall/*.db      # Ignore SQLite or other database files
+data/squall/*.sqlite  # Ignore SQLite database files
+data/squall/*.sqlite3 # Ignore alternative SQLite formats
+data/squall/*.csv     # Ignore dataset CSV files if applicable
+data/squall/*.json    # Ignore JSON dataset exports
+data/squall/*.parquet # Ignore Parquet dataset files
+data/squall/*.sql     # Ignore raw SQL dump files
