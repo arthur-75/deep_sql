@@ -13,3 +13,5 @@ def retrieve_similar_queries(new_query_vector: np.ndarray, library_vectors: list
     similarities = cosine_similarity([new_query_vector], library_vectors)
     similar_queries = [idx for idx, sim in enumerate(similarities[0]) if sim >= threshold]
     return similar_queries
+
+    
