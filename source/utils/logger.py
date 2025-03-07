@@ -12,3 +12,5 @@ def setup_logger():
     logger.setLevel(logging.INFO if is_main_process(False) else logging.WARN)
 
     return logger
+
+    

@@ -7,25 +7,6 @@ class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
-
-    is_jz: str = field(
-        metadata={"help": "Using Jean-zay (remove)."},
-        default=False,
-    )
-
-    question_in_decoder: bool = field(
-        default=False, metadata={"help": "Show every tokenize tables."}
-    )
-
-    is_inference: bool = field(
-        metadata={"help": "is inference ?."},
-        default=True,
-    )
-
-    mask_query_table: int = field(
-        metadata={"help": "if 1, masks attention between query and table."},
-        default=0,
-    )
     
     encoding_type: str = field(
         metadata={"help": "For debug."},

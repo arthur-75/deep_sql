@@ -30,12 +30,13 @@ def load_config(config_path: str) -> dict:
         exit(1)
 
 def main():
-    # Parse les arguments CLI
-    args = parse_arguments()
 
-    # Chargement de la configuration
-    config = load_config(args.config if args.config else "config/settings.yaml")
-
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+    else:
+        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    
     # Initialisation de la bibliothèque SQL
     sql_library = SQLLibrary()
 
