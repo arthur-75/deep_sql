@@ -14,7 +14,7 @@ import numpy as np
 from source.utils.args import  ModelArguments, DataArguments, TrainingArguments
 from transformers import HfArgumentParser
 
-
+import json
 
 
 # Unset potential debug variables for Ollama
@@ -27,6 +27,8 @@ logger = setup_logger()
 
 
 
+
+
 def main():
 
     parser = HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
@@ -36,14 +38,16 @@ def main():
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     
     # Initialisation de la bibliothèque SQL
-    sql_library = SQLLibrary(data_args.library_path)
+    sql_library = SQLLibrary(data_args, model_args)
     table_manager = TableManager(data_args.database_path)
 
     # Initialisation des agents LLM
     curriculum_agent = CurriculumAgent(model_name=model_args.curriculum_model, library=sql_library)
     iterative_agent = IterativePromptingAgent(model_name=model_args.iterative_model)
 
-    # Initialisation des exécutants
+    # Chargement des prompts
+    with open("../data/prompts.json", "r", encoding="utf-8") as json_file:
+        prompts = json.load(json_file)
     
 
     # Boucle principale d'exploration des requêtes SQL
@@ -52,7 +56,6 @@ def main():
     for i in range(num_iterations):
         logger.info(f"🔄 Iteration {i+1}/{num_iterations}")
 
-        instruction = "Générer une requête SQL plus complexe en suivant le curriculum."
         state = sql_library.get_sql(random_=True, num_q=2)
         logger.info(f"Library State : {state}\n\n")
 
@@ -61,7 +64,7 @@ def main():
 
         table_description, table_path = table_manager.get_random_table_info()
 
-        new_sql_template = curriculum_agent.generate_query_template(instruction, state, error_history, table_description)
+        new_sql_template = curriculum_agent.generate_query_template(prompts["curriculum_instruction"], state, error_history, table_description)
 
         logger.info(f"✅ Requête SQL générée : {new_sql_template}\n\n")
 
@@ -85,13 +88,6 @@ def main():
             logger.warning(f"❌ Erreur d'exécution Python : {python_execution_result['error']}")
             continue
 
-        # Étape 4: Analyse des feedbacks
-        is_valid = analyze_feedback(sql_execution_result, python_execution_result)
-
-        if not is_valid:
-            logger.info("🔁 Raffinement de la requête SQL avec l'agent itératif.")
-            new_sql_template = iterative_agent.refine_query(new_sql_template, sql_execution_result)
-            continue
 
         # Étape 5: Vérification de la similarité avec les requêtes existantes
         query_vector = np.random.rand(768)  # Simule l'encodage de la requête en vecteur

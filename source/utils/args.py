@@ -24,6 +24,16 @@ class ModelArguments:
         metadata={"help": "The model checkpoint for the iterative prompting agent."},
     )
 
+    sentence_model_name_or_path: Optional[str] = field(
+        default="paraphrase-MiniLM-L6-v2",
+        metadata={"help": "The sentence transformer model name or path."},
+    )
+
+    hf_tokens: Optional[str] = field(
+        default=None,
+        metadata={"help": "The Hugging Face model token."},
+    )
+
 @dataclass
 class DataArguments:
     """

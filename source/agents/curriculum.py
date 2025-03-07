@@ -30,6 +30,9 @@ class CurriculumAgent:
 
         response = self.call_llm(self.message)
 
+        print(f"***First Response***\n\n {response.message.content}\n\n\n")
+
+
         query = extract_sql_from_text(response.message.content)
             
         return query

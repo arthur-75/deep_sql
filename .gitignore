@@ -68,3 +68,5 @@ data/tables/*.csv     # Ignore dataset CSV files if applicable
 data/tables/*.json    # Ignore JSON dataset exports
 data/tables/*.parquet # Ignore Parquet dataset files
 data/tables/*.sql     # Ignore raw SQL dump files
+
+scripts/

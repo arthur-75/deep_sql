@@ -6,18 +6,22 @@ import json
 import random
 from typing import List
 import faiss
+from source.library.utils import load_sentence
+import numpy as np
 
 
 class SQLLibrary:
-    def __init__(self, library_path):
+    def __init__(self, data_args, model_args):
 
-        self.library_path = library_path
+        library_path = data_args.library_path
         # Load from disk or init empty
         if os.path.exists(library_path):
             with open(library_path, "rb", encoding="utf-8") as f:
                 self.storage = json.load(f)
         else:
             self.storage = {}
+
+        self.library_path = library_path
 
         dim = 1024  #  the vector dimension 
         if len(self.storage)==0:
@@ -28,7 +32,7 @@ class SQLLibrary:
         self.selected_index=[] # list of random selected index of sql skills 
         self.selected_ret_index = [] # list of retrieved selected index of sql skills ]
         
-
+        self.model = load_sentence(model_args.sentence_model_name_or_path, model_args.hf_tokens)
         
     def __repr__(self):
         return self.storage
@@ -92,3 +96,15 @@ class SQLLibrary:
 
 
 
+    def compute_embedding(self,text: str) -> List[float]:
+        """
+        Compute embedding (e.g. using sentence-transformers or OpenAI embeddings).
+        Return a vector as a list of floats.
+        """
+        # Example pseudocode:
+        # from sentence_transformers import SentenceTransformer
+        embedding = self.model.encode([text], convert_to_tensor=False
+                        ,batch_size=32,show_progress_bar=False,normalize_embeddings=True)
+        
+
+        return np.array(embedding, dtype=np.float32)
