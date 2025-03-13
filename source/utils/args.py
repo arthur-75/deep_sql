@@ -25,7 +25,7 @@ class ModelArguments:
     )
 
     sentence_model_name_or_path: Optional[str] = field(
-        default="paraphrase-MiniLM-L6-v2",
+        default="Alibaba-NLP/gte-large-en-v1.5",#"paraphrase-MiniLM-L6-v2",
         metadata={"help": "The sentence transformer model name or path."},
     )
 

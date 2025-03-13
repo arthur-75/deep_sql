@@ -18,3 +18,5 @@ unset OLLAMA_VERBOSE
 
 python ../run.py \
   --output_dir ../models/T2_M5_CPE_B1_E0/ALL \
+  --curriculum_model llama3.2 \
+  --num_iterations 102
