@@ -37,13 +37,13 @@ class CurriculumAgent:
         # retrieval error
         query_embdding = self.library.compute_embedding(query)
         sim_queires = self.library.get_sim_queries(query_embdding)
-        if sim_queires:
+        if sim_queires :
             self.prompt_error(query, sim_queires)
 
 
         #previus query too diffrent
         too_diffrent = self.library.get_sim_queries_prev(query_embdding)
-        if too_diffrent:
+        if too_diffrent  :
             self.prompt_error(query, too_diffrent, too_diff=True)
         
         #query = extract_sql_from_text(query)

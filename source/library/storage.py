@@ -82,7 +82,7 @@ class SQLLibrary:
         }
         self.vect_index.add(sql_embd)
        
-        if save or len(self.storage)+1 % self.data_args.save_skills_at_n ==0: #add later to argg
+        if len(self.storage)+1 % self.data_args.save_skills_at_n ==0: #add later to argg
             self.save()
     
 
@@ -112,6 +112,8 @@ class SQLLibrary:
         """
         Check prev query if it is too diffrent 
         """
+        if  len(self.storage)==0 : 
+            return None
         prev =  np.array(self.storage[str(len(self.storage)-1)]["embedding"])[None,:]
         sec_cond= (np.dot(embedding_vec, prev.T)/ (np.linalg.norm(embedding_vec) * np.linalg.norm(prev)))[0][0]
         if sec_cond <throushold: return self.storage[str(len(self.storage)-1)]["sql"]

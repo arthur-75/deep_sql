@@ -88,7 +88,7 @@ def main():
 
 
         # Étape 6: Stockage de la requête SQL validée
-        sql_library.add_query(new_sql_template, python_func=python_code,sql_embd=sql_embd, save=True)
+        sql_library.add_query(new_sql_template, python_func=python_code,sql_embd=sql_embd, save=False)
         logger.info(f"✅ Requête stockée avec succès !")
 
 
