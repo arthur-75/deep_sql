@@ -104,7 +104,7 @@ class CurriculumAgent:
             self.message.append({"role": "assistant", "content": query})
 
             if too_diff:
-                self.messages.append({"role": "user", "content": f"Not good because the previously generated query is too different from the previous SQL query: {queries_target}. it should be a bit different but not different. Rewrite it."})
+                self.message.append({"role": "user", "content": f"Not good because the previously generated query is too different from the previous SQL query: {queries_target}. it should be a bit different but not different. Rewrite it."})
                 print("The query is too different")
                 return  self.generate_query_template( None,None, None, None)
             

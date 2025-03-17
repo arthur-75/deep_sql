@@ -49,6 +49,11 @@ class DataArguments:
         metadata={"help": "The path to the SQLite database file."},
     )
 
+    save_skills_at_n: Optional[int] = field(
+        default=100,
+        metadata={"help": "After how how many loop we must save the skills"},
+    )
+
 
 @dataclass
 class TrainingArguments:

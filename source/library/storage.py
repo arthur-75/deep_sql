@@ -12,7 +12,7 @@ import numpy as np
 
 class SQLLibrary:
     def __init__(self, data_args, model_args):
-
+        self.data_args=data_args
         library_path = data_args.library_path
         # Load from disk or init empty
         if os.path.exists(library_path):
@@ -55,7 +55,7 @@ class SQLLibrary:
             self.selected_index = random.sample(list(self.storage.keys()),k=min(num_q,n_skill
                                                                 )
                                                 ) 
-            selected_sql = [self.storage[str(i)]["sql"] for  i in  self.selected_index]
+            selected_sql = [self.storage[i]["sql"] for  i in  self.selected_index]
         else:
             n_skill-=1
             selected_sql = [ self.storage[str(i)] for i in range(n_skill,n_skill-num_q,-1) ]
@@ -79,7 +79,7 @@ class SQLLibrary:
         }
         self.vect_index.add(sql_embd)
        
-        if save or len(self.storage)+1 % 100==0: #add later to argg
+        if save or len(self.storage)+1 % self.data_args.save_skills_at_n ==0: #add later to argg
             self.save()
     
 
@@ -113,7 +113,6 @@ class SQLLibrary:
         sec_cond= (np.dot(embedding_vec, prev.T)/ (np.linalg.norm(embedding_vec) * np.linalg.norm(prev)))[0][0]
         if sec_cond <throushold: return self.storage[str(len(self.storage)-1)]["sql"]
         else: return None
-
 
     
 
