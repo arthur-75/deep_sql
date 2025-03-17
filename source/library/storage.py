@@ -52,7 +52,10 @@ class SQLLibrary:
         if n_skill==0:
             return ["SELECT * \nFROM [table];" ]
         if random_: 
-            self.selected_index = random.sample(list(self.storage.keys()),k=min(num_q,n_skill
+            skills_shuffle= list(self.storage.keys())
+            
+            random.shuffle(skills_shuffle)
+            self.selected_index = random.sample(skills_shuffle,k=min(num_q,n_skill
                                                                 )
                                                 ) 
             selected_sql = [self.storage[i]["sql"] for  i in  self.selected_index]

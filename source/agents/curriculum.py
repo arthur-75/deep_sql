@@ -47,6 +47,7 @@ class CurriculumAgent:
             self.prompt_error(query, too_diffrent, too_diff=True)
         
         #query = extract_sql_from_text(query)
+        self.message = None
             
         return query,query_embdding
 
@@ -68,7 +69,6 @@ class CurriculumAgent:
 
         prompt += "📌 **Table Description:**\n"
         prompt += table_description + "\n\n"
-
         if state:
             prompt += "📂 **Previous SQL Queries:**\n"
             for idx, sql_query in enumerate(state, 1):
