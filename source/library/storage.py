@@ -18,6 +18,7 @@ class SQLLibrary:
         if os.path.exists(library_path):
             with open(library_path, "r") as f:
                 self.storage = json.load(f)
+                print("There is already",len(self.storage),"Sql queries")
         else:
             self.storage = {}
 
@@ -78,7 +79,7 @@ class SQLLibrary:
         }
         self.vect_index.add(sql_embd)
        
-        if save or len(self.storage)+1%10==0:
+        if save or len(self.storage)+1 % 100==0: #add later to argg
             self.save()
     
 
@@ -110,7 +111,7 @@ class SQLLibrary:
         """
         prev =  np.array(self.storage[str(len(self.storage)-1)]["embedding"])[None,:]
         sec_cond= (np.dot(embedding_vec, prev.T)/ (np.linalg.norm(embedding_vec) * np.linalg.norm(prev)))[0][0]
-        if sec_cond <throushold: return self.storage[str(len(self.storage))]["sql"]
+        if sec_cond <throushold: return self.storage[str(len(self.storage)-1)]["sql"]
         else: return None
 
 
