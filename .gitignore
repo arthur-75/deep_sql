@@ -69,4 +69,9 @@ data/tables/*.json    # Ignore JSON dataset exports
 data/tables/*.parquet # Ignore Parquet dataset files
 data/tables/*.sql     # Ignore raw SQL dump files
 
-scripts/
+# scripts/
+scripts/train/
+scripts/train/run.sh
+
+# models/
+scripts/models/
