@@ -70,6 +70,7 @@ def main():
         table_description, table_path = table_manager.get_random_table_info()
         logger.info(f"table {table_path}, table_description {table_description}\n\n")
 
+        new_sql_template, sql_embd = curriculum_agent.generate_query_template(prompts["curriculum_instruction"], state, error_history, table_description)
 
         # Étape 2: Générer la requête SQL
         new_sql_template = curriculum_agent.generate_query_template(curriculum_instruction, state, curriculum_error_history, table_description)
@@ -83,27 +84,18 @@ def main():
             logger.warning(f"❌ Erreur SQL détectée : {sql_execution_result['error']}")
             continue
 
-        # Étape 4: vérifier similarité si faill -> Etape 2 avec error_history
 
-        # Étape 5: Vérifier la différence si faill -> Etape 2 avec error_history
-        
+        # Étape 3: Exécution de la fonction Python associée (si besoin)
+        python_code = f"print('hellow world')"
+    
 
-        # Étape 6: Création de la fonction python
-        
-        if training_args.iterative_prompting: # Si l'itération est activée
-            python_code = iterative_agent.generate_python_function(iterative_instruction, new_sql_template, iterative_error_history)
-            
+        # Étape 4: vérifier similarité
+
+        # Étape 5: Vérifier la différence
 
 
-        # Étape 7: Execution de la fonction python si faill -> Etape 6 avec error_history
-
-
-        # Étape 8: Stockage de la requête SQL validée 
-
-
-        if not training_args.iterative_prompting:
-            python_code = f"print('hellow world')"
-        sql_library.add_query(new_sql_template, python_func=python_code, save=True)
+        # Étape 6: Stockage de la requête SQL validée
+        sql_library.add_query(new_sql_template, python_func=python_code,sql_embd=sql_embd, save=False)
         logger.info(f"✅ Requête stockée avec succès !")
 
 

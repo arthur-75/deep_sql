@@ -28,16 +28,28 @@ class CurriculumAgent:
 
         print(f"***CURRICULUM PROMPT***\n\n {self.message[0]['content']}\n\n\n")
 
-        response = self.call_llm(self.message)
+        response = self.call_llm(self.message) 
 
 
         query = response.message.content
         print(f"***First Response***\n\n {query}\n\n\n")
 
+        # retrieval error
+        query_embdding = self.library.compute_embedding(query)
+        sim_queires = self.library.get_sim_queries(query_embdding)
+        if sim_queires :
+            self.prompt_error(query, sim_queires)
 
+
+        #previus query too diffrent
+        too_diffrent = self.library.get_sim_queries_prev(query_embdding)
+        if too_diffrent  :
+            self.prompt_error(query, too_diffrent, too_diff=True)
+        
         #query = extract_sql_from_text(query)
+        self.message = None
             
-        return query
+        return query,query_embdding
 
 
 
@@ -56,7 +68,6 @@ class CurriculumAgent:
 
         prompt += "📌 **Table Description:**\n"
         prompt += table_description + "\n\n"
-
         if state:
             prompt += "📂 **Previous SQL Queries:**\n"
             for idx, sql_query in enumerate(state, 1):
@@ -82,6 +93,23 @@ class CurriculumAgent:
         
         return prompt
     
+    def prompt_error(self, query: str, queries_target: list, too_diff=False) -> str:
+            """
+            Upadte query with given error .
+
+            :param instruction: Instruction for the LLM (e.g., "Generate a SQL query").
+            :param state: A list of previously generated SQL queries.
+            """
+            self.message.append({"role": "assistant", "content": query})
+
+            if too_diff:
+                self.message.append({"role": "user", "content": f"Not good because the previously generated query is too different from the previous SQL query: {queries_target}. it should be a bit different but not different. Rewrite it."})
+                print("The query is too different")
+                return  self.generate_query_template( None,None, None, None)
+            
+            self.message.append({f"role": "user", "content": "Not good because the previously generated query is very similar to the following SQL queries: {queries_target}"})
+            print("prompt_error")
+            return self.generate_query_template( None,None, None, None)
 
 
     def call_llm(self, messages: list) -> str:

@@ -25,7 +25,7 @@ class ModelArguments:
     )
 
     sentence_model_name_or_path: Optional[str] = field(
-        default="paraphrase-MiniLM-L6-v2",
+        default="Alibaba-NLP/gte-large-en-v1.5",#"paraphrase-MiniLM-L6-v2",
         metadata={"help": "The sentence transformer model name or path."},
     )
 
@@ -49,14 +49,9 @@ class DataArguments:
         metadata={"help": "The path to the SQLite database file."},
     )
 
-    curriculum_instruction: Optional[str] = field(
-        default="../data/curriculum_instruction.txt",
-        metadata={"help": "The path to the curriculum instruction file."},
-    )
-    
-    iterative_instruction: Optional[str] = field(
-        default="../data/iterative_instruction.txt",
-        metadata={"help": "The path to the iterative instruction file."},
+    save_skills_at_n: Optional[int] = field(
+        default=100,
+        metadata={"help": "After how how many loop we must save the skills"},
     )
 
 
