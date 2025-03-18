@@ -54,6 +54,11 @@ class DataArguments:
         metadata={"help": "After how how many loop we must save the skills"},
     )
 
+    curriculum_instruction: Optional[str] = field(
+        default="curriculum_instruction.txt",
+        metadata={"help": "The path to the curriculum instruction file."},
+    )
+
 
 @dataclass
 class TrainingArguments:
