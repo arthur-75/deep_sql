@@ -1,0 +1,396 @@
+[
+  {
+    "tables": [
+      "w"
+    ],
+    "question": {
+      "Easy": "What are the `c2` values for which `c1` is '1969'?",
+      "Moderate": "What are the values of `c1` and `c4_number` where `c5` is not null?",
+      "Complex": "List all unique `c6_first` values where `c6_second` is 'uk'."
+    },
+    "sql": [
+      "SELECT c2 FROM w WHERE c1 = '1969';",
+      "SELECT c1, c4_number FROM w WHERE c5 IS NOT NULL;",
+      "SELECT DISTINCT c6_first FROM w WHERE c6_second = 'uk';"
+    ],
+    "result": [
+      [
+        "Error executing SQL: execute() argument 1 must be str, not list"
+      ]
+    ],
+    "variations": [
+      "What are the `c2` values when `c1` is '1969'?",
+      "Find the `c1` and `c4_number` values where `c5` is not empty.",
+      "What unique values does `c6_first` have where `c6_second` equals 'uk'?"
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "It seems that the previous attempts at generating a question didn't quite meet the similarity threshold needed, as they were relatively different from the most recent question. Let's adjust by focusing on a question that keeps more similarities with \"List all unique `c6_first` values where `c6_second` is 'uk'.\"\n\nHere\u2019s a new attempt:\nQuestion: \"What are the `c1` and `c1_number` where `c6_second` is 'uk'?\"\n\nThis question shares the usage of `c6_second` from the recent question, while involving a different combination of columns, thereby helping to achieve a suitable similarity level.\n\nSQL Query:\n```sql\nSELECT c1, c1_number FROM w WHERE c6_second = 'uk';\n```\n\nThis query effectively checks for entries where `c6_second` is 'uk', engaging `c1` and `c1_number`, maintaining thematic similarity with the existing questions while ensuring novelty.",
+    "sql": "SELECT c1, c1_number FROM w WHERE c6_second = 'uk';",
+    "result": [
+      [
+        "1971",
+        1971
+      ],
+      [
+        "1974",
+        1974
+      ]
+    ],
+    "variations": [
+      "Which `c1` values are associated with 'uk'?",
+      "What are the `c1` and `c1_count` where `c6_second` equals 'uk'?",
+      "Identify `c1` entries and their numbers where `c6_second` is marked as 'uk'."
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": [
+      "What are the `agg` values where `c6_second` is 'uk'?",
+      "SELECT agg FROM w WHERE c6_second = 'uk';"
+    ],
+    "sql": "SELECT agg FROM w WHERE c6_second = 'uk';",
+    "result": [
+      [
+        0
+      ],
+      [
+        0
+      ]
+    ],
+    "variations": [
+      "What are the values for 'uk'?",
+      "Which 'agg' values correspond to 'uk'?",
+      "Can you list the 'agg' entries where 'c6_second' is 'uk'?"
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "What are the `c2` and `c3_number` values for entries where `agg` is 0 and `c1_number` is greater than 1969?",
+    "sql": "SELECT c2, c3_number FROM w WHERE agg = 0 AND c1_number > 1969;",
+    "result": [
+      {
+        "c2": "illusion",
+        "c3_number": null
+      },
+      {
+        "c2": "prologue",
+        "c3_number": null
+      },
+      {
+        "c2": "ashes are burning",
+        "c3_number": null
+      },
+      {
+        "c2": "turn of the cards",
+        "c3_number": null
+      },
+      {
+        "c2": "scheherazade and other stories",
+        "c3_number": null
+      },
+      {
+        "c2": "novella",
+        "c3_number": null
+      },
+      {
+        "c2": "a song for all seasons",
+        "c3_number": 35.0
+      },
+      {
+        "c2": "azure d'or",
+        "c3_number": 73.0
+      },
+      {
+        "c2": "camera camera",
+        "c3_number": null
+      },
+      {
+        "c2": "time-line",
+        "c3_number": null
+      },
+      {
+        "c2": "tuscany",
+        "c3_number": null
+      },
+      {
+        "c2": "grandine il vento",
+        "c3_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "1. What are the values of `c2` and `c3_number` for rows where `agg` equals 0 and `c1_number` exceeds 1969?",
+    "sql": "SELECT c2, c3_number FROM w WHERE agg = 0 AND c1_number > 1969;",
+    "result": [
+      {
+        "c2": "illusion",
+        "c3_number": null
+      },
+      {
+        "c2": "prologue",
+        "c3_number": null
+      },
+      {
+        "c2": "ashes are burning",
+        "c3_number": null
+      },
+      {
+        "c2": "turn of the cards",
+        "c3_number": null
+      },
+      {
+        "c2": "scheherazade and other stories",
+        "c3_number": null
+      },
+      {
+        "c2": "novella",
+        "c3_number": null
+      },
+      {
+        "c2": "a song for all seasons",
+        "c3_number": 35.0
+      },
+      {
+        "c2": "azure d'or",
+        "c3_number": 73.0
+      },
+      {
+        "c2": "camera camera",
+        "c3_number": null
+      },
+      {
+        "c2": "time-line",
+        "c3_number": null
+      },
+      {
+        "c2": "tuscany",
+        "c3_number": null
+      },
+      {
+        "c2": "grandine il vento",
+        "c3_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "2. What are the `c2` and `c3_number` for records with `agg` at 0 and `c1_number` more than 1969?",
+    "sql": "SELECT c2, c3_number FROM w WHERE agg = 0 AND c1_number > 1969;",
+    "result": [
+      {
+        "c2": "illusion",
+        "c3_number": null
+      },
+      {
+        "c2": "prologue",
+        "c3_number": null
+      },
+      {
+        "c2": "ashes are burning",
+        "c3_number": null
+      },
+      {
+        "c2": "turn of the cards",
+        "c3_number": null
+      },
+      {
+        "c2": "scheherazade and other stories",
+        "c3_number": null
+      },
+      {
+        "c2": "novella",
+        "c3_number": null
+      },
+      {
+        "c2": "a song for all seasons",
+        "c3_number": 35.0
+      },
+      {
+        "c2": "azure d'or",
+        "c3_number": 73.0
+      },
+      {
+        "c2": "camera camera",
+        "c3_number": null
+      },
+      {
+        "c2": "time-line",
+        "c3_number": null
+      },
+      {
+        "c2": "tuscany",
+        "c3_number": null
+      },
+      {
+        "c2": "grandine il vento",
+        "c3_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "3. Retrieve `c2` and `c3_number` where `agg` is 0 and `c1_number` is above 1969.",
+    "sql": "SELECT c2, c3_number FROM w WHERE agg = 0 AND c1_number > 1969;",
+    "result": [
+      {
+        "c2": "illusion",
+        "c3_number": null
+      },
+      {
+        "c2": "prologue",
+        "c3_number": null
+      },
+      {
+        "c2": "ashes are burning",
+        "c3_number": null
+      },
+      {
+        "c2": "turn of the cards",
+        "c3_number": null
+      },
+      {
+        "c2": "scheherazade and other stories",
+        "c3_number": null
+      },
+      {
+        "c2": "novella",
+        "c3_number": null
+      },
+      {
+        "c2": "a song for all seasons",
+        "c3_number": 35.0
+      },
+      {
+        "c2": "azure d'or",
+        "c3_number": 73.0
+      },
+      {
+        "c2": "camera camera",
+        "c3_number": null
+      },
+      {
+        "c2": "time-line",
+        "c3_number": null
+      },
+      {
+        "c2": "tuscany",
+        "c3_number": null
+      },
+      {
+        "c2": "grandine il vento",
+        "c3_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "List the `c5_number` values where `c4` is not null and `c1_number` is 1973.",
+    "sql": "SELECT c5_number FROM w WHERE c4 IS NOT NULL AND c1_number = 1973;",
+    "result": [
+      {
+        "c5_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "1. Show `c5_number` for entries with `c1_number` as 1973 and `c4` filled.",
+    "sql": "SELECT c5_number FROM w WHERE c4 IS NOT NULL AND c1_number = 1973;",
+    "result": [
+      {
+        "c5_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "2. Return `c5_number` where `c4` is present and `c1_number` equals to 1973.",
+    "sql": "SELECT c5_number FROM w WHERE c4 IS NOT NULL AND c1_number = 1973;",
+    "result": [
+      {
+        "c5_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "3. Which `c5_number` values correspond to non-null `c4` with `c1_number` being 1973?",
+    "sql": "SELECT c5_number FROM w WHERE c4 IS NOT NULL AND c1_number = 1973;",
+    "result": [
+      {
+        "c5_number": null
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "What are the `c2` values where `c3_number` is 60.0 and `c6_first_number` is null?",
+    "sql": "SELECT c2 FROM w WHERE c3_number = 60.0 AND c6_first_number IS NULL;",
+    "result": [
+      {
+        "c2": "renaissance"
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "1. What are the `c2` values when certain conditions on numerical columns are met?",
+    "sql": "SELECT c2 FROM w WHERE c3_number = 60.0 AND c6_first_number IS NULL;",
+    "result": [
+      {
+        "c2": "renaissance"
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "2. Which `c2` entries correspond to a `c3_number` of 60.0 and `c6_first_number` being absent?",
+    "sql": "SELECT c2 FROM w WHERE c3_number = 60.0 AND c6_first_number IS NULL;",
+    "result": [
+      {
+        "c2": "renaissance"
+      }
+    ]
+  },
+  {
+    "tables": [
+      "w"
+    ],
+    "question": "3. Find `c2` values where `c3_number` is 60.0 and `c6_first_number` is null.",
+    "sql": "SELECT c2 FROM w WHERE c3_number = 60.0 AND c6_first_number IS NULL;",
+    "result": [
+      {
+        "c2": "renaissance"
+      }
+    ]
+  }
+]
