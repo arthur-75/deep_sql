@@ -4,189 +4,14 @@ from typing import Dict, List, Tuple, Any, Union, Optional
 import json
 import os
 from tqdm import tqdm
-from sklearn.feature_extraction.text import TfidfVectorizer
-from smolagents import CodeAgent, tool, HfApiModel, OpenAIServerModel,LiteLLMModel
+from smolagents import CodeAgent, HfApiModel, OpenAIServerModel,LiteLLMModel
 #from evaluate import load
 #bertscore = load("bertscore")
-from retriever import embeddings_vector_store,RetrieverTool
+from retriever import embeddings_vector_store,RetrieverTool,get_emebdding_model
 from uuid import uuid4
 from langchain_core.documents import Document
-import pickle
-
-
-
-# Setup database connection
-@tool
-def connect_to_database(db_path: str) -> sqlite3.Connection:
-    """
-    Connect to the SQLite database and return connection object.
-    
-    Args:
-        db_path: Path to the SQLite database file
-    
-    Returns:
-        SQLite connection object
-    """
-    conn = sqlite3.connect(db_path)
-    return conn
-
-@tool
-def get_tables_info(conn: sqlite3.Connection) -> Dict[str, Any]:
-    """
-    Get all table names and their schemas from the database in a readable format.
-    
-    Args:
-        conn: SQLite database connection
-    
-    Returns:
-        Dictionary containing tables and their formatted schemas
-    """
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = [table[0] for table in cursor.fetchall()]
-    
-    schemas = {}
-    for table in tables:
-        cursor.execute(f"PRAGMA table_info({table});")
-        table_info = cursor.fetchall()
-        # Format the schema in a more readable way
-        formatted_columns = []
-        for col in table_info:
-            col_id, name, type_, notnull, default, pk = col
-            attributes = []
-            if pk:
-                attributes.append("PRIMARY KEY")
-            if notnull:
-                attributes.append("NOT NULL")
-            if default is not None:
-                attributes.append(f"DEFAULT {default}")
-            
-            attr_str = ", ".join(attributes)
-            if attr_str:
-                formatted_columns.append(f"{name} ({type_}) - {attr_str}")
-            else:
-                formatted_columns.append(f"{name} ({type_})")
-                
-        schemas[table] = formatted_columns
-    
-    return {"tables": tables, "schemas": schemas}
-
-@tool
-def get_table_samples(conn: sqlite3.Connection, limit: int = 5) -> Dict[str, Any]:
-    """
-    Get sample rows from each table in the database in a readable format.
-    
-    Args:
-        conn: SQLite database connection
-        limit: Maximum number of rows to fetch per table
-    
-    Returns:
-        Dictionary with formatted table samples
-    """
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = [table[0] for table in cursor.fetchall()]
-    
-    samples = {}
-    for table in tables:
-        try:
-            cursor.execute(f"SELECT * FROM {table} LIMIT {limit};")
-            columns = [description[0] for description in cursor.description]
-            rows = cursor.fetchall()
-            
-            # Format the sample data as readable rows
-            formatted_rows = []
-            for row in rows:
-                formatted_row = {}
-                for i, value in enumerate(row):
-                    formatted_row[columns[i]] = value
-                formatted_rows.append(formatted_row)
-                
-            samples[table] = formatted_rows
-        except Exception as e:
-            samples[table] = {"error": str(e)}
-    
-    return samples
-
-@tool
-def execute_sql(conn: sqlite3.Connection, sql_query: str) -> List[Tuple]:
-    """
-    Execute SQL query and return results.
-    
-    Args:
-        conn: SQLite database connection
-        sql_query: SQL query to execute
-    
-    Returns:
-        List of tuple results from the query
-    """
-    cursor = conn.cursor()
-    try:
-        cursor.execute(sql_query)
-        return cursor.fetchall()
-    except Exception as e:
-        return [(f"Error executing SQL: {str(e)}",)]
-
-@tool
-def calculate_similarity(sql1: str, sql2: str) -> float:
-    """
-    Calculate cosine similarity between two SQL queries.
-    
-    Args:
-        sql1: First SQL query string
-        sql2: Second SQL query string
-    
-    Returns:
-        Similarity score between 0 and 1
-    """
-    # Convert to string if necessary
-    if isinstance(sql1, list):
-        sql1 = str(sql1)
-    if isinstance(sql2, list):
-        sql2 = str(sql2)
-        
-    #vectorizer = TfidfVectorizer()
-    #tfidf_matrix = vectorizer.fit_transform([sql1, sql2])
-    #return float((tfidf_matrix[0] * tfidf_matrix[1].T).toarray()[0][0])
-    score = bertscore.compute(predictions=[sql1], references=[sql2], lang="en")
-    #score = bertscore.compute([sql1], [sql2])[2].item()
-    print("BS: ", score)
-    return score['f1'][0]
-
-@tool
-def check_query_novelty(library: List[Dict[str, Any]], new_sql: str, gamma_max: float = 0.9, gamma_min: float = 0.6) -> Tuple[bool, str]:
-    """
-    Check if the new SQL query meets the similarity constraints.
-    
-    Args:
-        library: List of existing dataset entries
-        new_sql: New SQL query to check
-        gamma_max: Maximum allowed similarity threshold
-        gamma_min: Minimum required similarity threshold
-    
-    Returns:
-        Tuple of (is_novel, explanation_message)
-    """
-    if not library:
-        return (True, "First query - automatically accepted")
-    
-    all_similarities = []
-    for entry in library:
-        similarity = calculate_similarity(entry["sql"], new_sql)
-        all_similarities.append(similarity)
-    
-    max_similarity = min(all_similarities)
-    recent_similarity = all_similarities[-1]
-    
-    if max_similarity > gamma_max:
-        return (False, f"Too similar to existing query (similarity: {max_similarity:.2f})")
-    
-    if recent_similarity < gamma_min:
-        return (False, f"Too different from recent query (similarity: {recent_similarity:.2f})")
-    
-    return (True, f"Query accepted (max similarity: {max_similarity:.2f}, recent similarity: {recent_similarity:.2f})")
-
-
+from tools import get_synonym,execute_sql,get_table_samples,get_tables_info,connect_to_database,validate_sql_query
+from langchain_community.vectorstores import FAISS
 
 
 
@@ -202,24 +27,23 @@ else:
     model = OpenAIServerModel("gpt-4o")
 
 # Initialize the dataset library
-def init_library(library_path: str = "sql_dataset_library.json",vector_store_path='vector_store.pkl') -> List[Dict[str, Any]]:
+def init_library(library_path: str = "sql_dataset_library.json",vector_store_path='vector_store',model_name="Alibaba-NLP/gte-large-en-v1.5") -> List[Dict[str, Any]]:
     """Initialize or load the existing library"""
     if os.path.exists(library_path):
         with open(library_path, 'r') as f:
             library= json.load(f)
-        with open(vector_store_path, 'rb') as handle:
-            vector_store = pickle.load(handle)
+        vector_store = FAISS.load_local(vector_store_path, embeddings=get_emebdding_model(model_name) , allow_dangerous_deserialization=True)
         return library,vector_store
    
-    return [],embeddings_vector_store()
+    return [],embeddings_vector_store(model_name)
 
 # Save the library to disk
-def save_library(library: List[Dict[str, Any]],vector_store, vector_store_path='vector_store.pkl',library_path: str = "sql_dataset_library.json",):
+def save_library(library: List[Dict[str, Any]],vector_store,library_path: str = "sql_dataset_library.json", vector_store_path='vector_store',):
     """Save the current library to disk"""
     with open(library_path, 'w') as f:
         json.dump(library, f, indent=2)
-    with open(vector_store_path, 'wb') as handle:
-        pickle.dump(vector_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    vector_store.save_local(vector_store_path)
+   
 
 # Create the agents with access to appropriate tools
 def create_agents(model, library,retriever_tool):
@@ -234,74 +58,28 @@ def create_agents(model, library,retriever_tool):
             retriever_tool
         ],
         name="question_generator",
-        description="Generates a new database question based on schema and sample data"
+        description="Generates a new database question based on schema and sample data",
+        additional_authorized_imports=["pandas","numpy"],
     )
 
     sql_translator = CodeAgent(
         model=model,
         tools=[execute_sql],
         name="sql_translator", 
-        description="Translates natural language questions into SQL queries"
+        description="Translates natural language questions into SQL queries",
+        additional_authorized_imports=["pandas","numpy"],#,"sqlite3"
     )
 
     question_diversity = CodeAgent(
         model=model,
-        tools=[],
+        tools=[get_synonym],
         name="question_diversity",
-        description="Creates diverse variations of questions using different techniques"
+        description="Creates diverse variations of questions using different techniques",
+        additional_authorized_imports=["pandas","numpy","sqlite3","requests","bs4"],
     )
     
     return question_generator, sql_translator, question_diversity
 
-@tool
-def validate_sql_query(conn: sqlite3.Connection, sql_query: str) -> Dict[str, Any]:
-    """
-    Validate that an SQL query runs correctly and returns results.
-    
-    Args:
-        conn: SQLite database connection
-        sql_query: SQL query to validate
-    
-    Returns:
-        Dictionary with validation status and results or error message
-    """
-    cursor = conn.cursor()
-    try:
-        cursor.execute(sql_query)
-        results = cursor.fetchall()
-        
-        # Check if we got any results
-        if not results or len(results) == 0:
-            return {
-                "valid": False,
-                "error": "Query executed successfully but returned no results",
-                "results": []
-            }
-            
-        # Get column names for better readability
-        column_names = [description[0] for description in cursor.description]
-        
-        # Format results as list of dictionaries
-        formatted_results = []
-        for row in results:
-            formatted_row = {}
-            for i, value in enumerate(row):
-                formatted_row[column_names[i]] = value
-            formatted_results.append(formatted_row)
-        
-        return {
-            "valid": True,
-            "results": formatted_results,
-            "row_count": len(results),
-            "column_names": column_names
-        }
-        
-    except Exception as e:
-        return {
-            "valid": False,
-            "error": str(e),
-            "results": []
-        }
 
 def run_pipeline_step(db_path: str, library: List[Dict[str, Any]], 
                       question_generator, sql_translator, question_diversity,retriever_tool,
@@ -456,7 +234,7 @@ def run_pipeline_step(db_path: str, library: List[Dict[str, Any]],
 
 
 # The main loop for dataset generation
-def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_dataset_library.json") -> None:
+def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_dataset_library.json",vector_store_path='vector_store') -> None:
     """
     Generate a dataset with the specified number of entries
     
@@ -466,7 +244,7 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
         library_path: Path to save the library JSON
     """
     # Initialize or load existing library
-    library,vector_store = init_library(library_path)
+    library,vector_store = init_library(library_path,vector_store_path)
     print(f"Starting with library containing {len(library)} entries")
     
     retriever_tool = RetrieverTool(vector_store)
@@ -489,7 +267,7 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
             print(f"Added entry #{len(library)} to library")
             
             # Save after each successful addition
-            save_library(library, library_path)
+            save_library(library,vector_store, library_path,vector_store_path)
             
             progress_bar.set_postfix(library_size=len(library))
         else:
