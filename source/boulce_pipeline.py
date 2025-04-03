@@ -5,9 +5,14 @@ import json
 import os
 from tqdm import tqdm
 from sklearn.feature_extraction.text import TfidfVectorizer
-from smolagents import CodeAgent, tool, HfApiModel, OpenAIServerModel
-from evaluate import load
-bertscore = load("bertscore")
+from smolagents import CodeAgent, tool, HfApiModel, OpenAIServerModel,LiteLLMModel
+#from evaluate import load
+#bertscore = load("bertscore")
+from retriever import embeddings_vector_store,RetrieverTool
+from uuid import uuid4
+from langchain_core.documents import Document
+import pickle
+
 
 
 # Setup database connection
@@ -187,34 +192,46 @@ def check_query_novelty(library: List[Dict[str, Any]], new_sql: str, gamma_max: 
 
 # Initialize model based on available API keys
 if not os.environ.get("OPENAI_API_KEY"):
-    model = HfApiModel()
+    #model = HfApiModel()
+    model = LiteLLMModel(
+    model_id="ollama_chat/llama3.1:8b-instruct-fp16", # This model is a bit weak for agentic behaviours though
+    api_base="http://localhost:11434", # replace with 127.0.0.1:11434 or remote open-ai compatible server if necessary
+    num_ctx=8192,device="mps" # ollama default is 2048 which will fail horribly. 8192 works for easy tasks, more is better. Check https://huggingface.co/spaces/NyxKrage/LLM-Model-VRAM-Calculator to calculate how much VRAM this will need for the selected model.
+    )   
 else:
     model = OpenAIServerModel("gpt-4o")
 
 # Initialize the dataset library
-def init_library(library_path: str = "sql_dataset_library.json") -> List[Dict[str, Any]]:
+def init_library(library_path: str = "sql_dataset_library.json",vector_store_path='vector_store.pkl') -> List[Dict[str, Any]]:
     """Initialize or load the existing library"""
     if os.path.exists(library_path):
         with open(library_path, 'r') as f:
-            return json.load(f)
-    return []
+            library= json.load(f)
+        with open(vector_store_path, 'rb') as handle:
+            vector_store = pickle.load(handle)
+        return library,vector_store
+   
+    return [],embeddings_vector_store()
 
 # Save the library to disk
-def save_library(library: List[Dict[str, Any]], library_path: str = "sql_dataset_library.json"):
+def save_library(library: List[Dict[str, Any]],vector_store, vector_store_path='vector_store.pkl',library_path: str = "sql_dataset_library.json",):
     """Save the current library to disk"""
     with open(library_path, 'w') as f:
         json.dump(library, f, indent=2)
+    with open(vector_store_path, 'wb') as handle:
+        pickle.dump(vector_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Create the agents with access to appropriate tools
-def create_agents(model, library):
+def create_agents(model, library,retriever_tool):
     """Create the pipeline agents with access to the library"""
     
     question_generator = CodeAgent(
         model=model,
         tools=[
-            get_tables_info,
-            get_table_samples,
-            check_query_novelty
+            #get_tables_info,
+            #get_table_samples,
+            #check_query_novelty
+            retriever_tool
         ],
         name="question_generator",
         description="Generates a new database question based on schema and sample data"
@@ -287,8 +304,8 @@ def validate_sql_query(conn: sqlite3.Connection, sql_query: str) -> Dict[str, An
         }
 
 def run_pipeline_step(db_path: str, library: List[Dict[str, Any]], 
-                      question_generator, sql_translator, question_diversity,
-                      max_attempts: int = 5) -> Optional[Dict[str, Any]]:
+                      question_generator, sql_translator, question_diversity,retriever_tool,
+                      max_attempts: int = 5,) -> Optional[Dict[str, Any]]:
     """Run the full pipeline once to generate a dataset entry with validation"""
     
     conn = connect_to_database(db_path)
@@ -389,12 +406,12 @@ def run_pipeline_step(db_path: str, library: List[Dict[str, Any]],
         print(f"SQL validation successful! Found {validation_result['row_count']} results.")
         
         # 4. Check novelty if library exists
-        if library:
-            is_novel, message = check_query_novelty(library, sql_query)
-            print(f"Novelty check: {message}")
-            if not is_novel:
-                print("Query did not meet novelty requirements, retrying...")
-                continue  # Try again with a new question
+        #if library:
+        #    is_novel, message = check_query_novelty(library, sql_query)
+        #    print(f"Novelty check: {message}")
+        #    if not is_novel:
+        #        print("Query did not meet novelty requirements, retrying...")
+        #        continue  # Try again with a new question
         
         # 5. Generate question variations
         diversity_prompt = f"""
@@ -415,6 +432,7 @@ def run_pipeline_step(db_path: str, library: List[Dict[str, Any]],
         variations = question_diversity.run(diversity_prompt)
         print(f"Generated variations: {variations}")
         entry = []
+        retriever_tool.vectordb.add_documents(documents=[Document(question)], ids=[str(uuid4())])
         entry.append({
                 "tables": tables_info['tables'],
                 "question": question,
@@ -422,6 +440,7 @@ def run_pipeline_step(db_path: str, library: List[Dict[str, Any]],
                 "result": validation_result["results"],
             })
         for varaition in variations:
+            retriever_tool.vectordb.add_documents(documents=[Document(varaition)], ids=[str(uuid4())])
             entry.append({
                 "tables": tables_info['tables'],
                 "question": varaition,
@@ -447,11 +466,13 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
         library_path: Path to save the library JSON
     """
     # Initialize or load existing library
-    library = init_library(library_path)
+    library,vector_store = init_library(library_path)
     print(f"Starting with library containing {len(library)} entries")
     
+    retriever_tool = RetrieverTool(vector_store)
+
     # Create agents
-    question_generator, sql_translator, question_diversity = create_agents(model, library)
+    question_generator, sql_translator, question_diversity = create_agents(model, library,retriever_tool)
     
     # Main generation loop
     progress_bar = tqdm(range(num_entries), desc="Generating dataset entries")
@@ -459,7 +480,7 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
         progress_bar.set_description(f"Entry {len(library) + 1}")
         
         # Run one pipeline step
-        entries = run_pipeline_step(db_path, library, question_generator, sql_translator, question_diversity)
+        entries = run_pipeline_step(db_path, library, question_generator, sql_translator, question_diversity,retriever_tool)
         
         if entries:
             # Add to library
