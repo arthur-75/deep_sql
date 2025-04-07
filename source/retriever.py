@@ -65,7 +65,8 @@ class RetrieverTool(Tool):
         assert isinstance(question, str), "Your search query must be a string."
 
         if not len(self.vectordb.index_to_docstore_id):
-            return f'Question/Query: "{question}" is accepted (no existing records).'
+            print(f'Question/Query: "{question}" is accepted (no existing records).')
+            return question
         # Perform similarity search with filter
         docs = self.vectordb.similarity_search_with_score(
             query=question,
@@ -87,6 +88,7 @@ class RetrieverTool(Tool):
         if doc_min:
             raise ValueError (f"Wrong, Retrieved queries are too different from recent question/query (Retrieved questions/queries  : {doc_min}) rewrite the question/query.")
         
-        return f'Question/Query: "{question}" is accepted (no existing records).'
+        print(f'Question/Query: "{question}" is accepted (no existing records).')
+        return question
 
 

@@ -122,6 +122,7 @@ Techniques to apply:
 4. Maintain the essential meaning so the same SQL query still applies.
 5. Words in quotes ' ' must not be modified.
 6. Use 'get_synonym' tool to look online for synonyms if need.
+7. final_answer is the SQL query.
 
 
 Return exactly 3 rephrased questions in a list-like format, no additional text.

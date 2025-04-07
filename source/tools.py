@@ -213,7 +213,8 @@ class ExecuteSQLTool(Tool):
         
         try:
             cursor.execute(sql_query)
-            return str(cursor.fetchall())
+            print(str(cursor.fetchall()))
+            return sql_query
         except Exception as e:
-            return f"Error executing SQL: {str(e)}"
+            return f"Error executing SQL: {str(e)} for the query: {sql_query}"
 
