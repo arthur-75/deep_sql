@@ -60,7 +60,7 @@ def create_agents(model,retriever_tool,execute_sql):
         ],
         name="question_generator",
         description="Generates a new database question based on schema and sample data",
-        additional_authorized_imports=["pandas","numpy"],
+        additional_authorized_imports=["numpy"],
     )
 
     sql_translator = CodeAgent(
@@ -101,28 +101,18 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         validation_result=execute_sql(sql_query)
         
         # 3. Validate the SQL query
-        #validation_result = validate_sql_query(conn, sql_query)
-        
-        #if not validation_result["valid"]:
-        #    print(f"SQL validation failed: {validation_result.get('error', 'Unknown error')}")
-        #    continue  # Try again with a new question
+
             
         print(f"SQL validation successful! Found {validation_result} results.")
         
-        # 4. Check novelty if library exists
-        #if library:
-        #    is_novel, message = check_query_novelty(library, sql_query)
-        #    print(f"Novelty check: {message}")
-        #    if not is_novel:
-        #        print("Query did not meet novelty requirements, retrying...")
-        #        continue  # Try again with a new question
-        
+
         # 5. Generate question variations
+        entry = []
         if "Error executing SQL" in str(validation_result) or len(validation_result)==0: continue
         diversity_prompt=get_extra_prompt_divers(question,sql_query,tables_info)
         variations = question_diversity.run(diversity_prompt)
         print(f"Generated variations: {variations}")
-        entry = []
+        
         retriever_tool.vectordb.add_documents(documents=[Document(question)], ids=[str(uuid4())])
         entry.append({
                 "tables": tables_info['tables'],
@@ -138,6 +128,9 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
                 "sql": sql_query,
                 "result": validation_result #validation_result["results"],
             })
+
+
+        
         
         return entry
     
@@ -199,8 +192,9 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
     
 # Example usage
 if __name__ == "__main__":
-    db_path = "../data/tables/db/200_0.db"  # Path to the database file
-    num_entries = 1000  # Number of entries to generate
+    #db_path = "../data/tables/db/{}.db"  # Path to the database file
+    db_path ="../data/tables/db/200_0.db"
+    num_entries = 10  # Number of entries to generate
     
     generate_dataset(db_path, num_entries)
 

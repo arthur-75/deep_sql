@@ -1,6 +1,114 @@
 
 
+def get_prompt(tables_info,table_samples,library):
+    # 1. Generate question with context
+    question_prompt = f"""
+    You are an SQL question generator in natural language for a database with the following structure:
 
+    DATABASE TABLES:
+    {', '.join(tables_info['tables'])}
+
+    SCHEMA FOR EACH TABLE:
+    """
+
+    sql_prompt = f"""
+    You are an SQL expert translating natural language to SQL.
+    
+    DATABASE TABLES:
+    {', '.join(tables_info['tables'])}
+
+    SCHEMA FOR EACH TABLE:
+    """
+
+    for table, columns in tables_info['schemas'].items():
+        question_prompt += f"\nTable: {table}\n"
+        sql_prompt += f"\nTable: {table}\n"
+        for column in columns:
+            question_prompt += f"  - {column}\n"
+            sql_prompt += f"  - {column}\n"
+
+    question_prompt += "\nSAMPLE DATA:\n"
+    sql_prompt += "\nSAMPLE DATA:\n"
+    for table, rows in table_samples.items():
+        question_prompt += f"\nTable: {table} (showing {len(rows)} rows)\n"
+        sql_prompt += f"\nTable: {table} (first few rows):\n"
+        for i, row in enumerate(rows):
+            question_prompt += f"  Row {i+1}: {row}\n"
+            sql_prompt += f"  {row}\n"
+            
+      
+        
+    # Add library context if available
+    if library:
+        question_prompt += f"\nNOTE: The library already contains {len(library)} questions."
+        question_prompt += "\nRecent questions in the library:"
+        for i in range(min(3, len(library))):
+            idx = len(library) - i - 1
+            question_prompt += f"\n- {library[idx]['question']}"
+        
+        if len(library) > 0:
+            question_prompt += "\n\nYour question should be similar to the existing ones in complexity, but ask about different tables or relationships."
+    
+    question_prompt += """
+    Using the database schema and sample data above, generate a clear, specific question (in natural language )
+    that can be answered using SQL on this database.
+    
+    IMPORTANT: Make sure your question:
+    1. Is specific enough to be translated into SQL
+    2. Has an answer in the database (based on the sample data)
+    3. Requires only one SQL query to answer
+    4. Is written in simple, clear natural language 
+
+    
+    Return only the question in natural language without any explanations.
+    """
+
+
+
+    return question_prompt,sql_prompt
+
+
+
+
+def get_extra_prompt_sql(sql_prompt,question):
+        # 2. Translate to SQL
+
+    sql_prompt += f"""
+    Question: {question}
+    
+    Write a SINGLE valid SQL query that correctly answers this question.
+    Consider JOINs between tables if needed.
+    Make sure the query will return results based on the sample data shown.
+    Return ONLY the SQL query without any explanations or markdown formatting.
+    """
+    
+    return sql_prompt
+        
+def get_extra_prompt_divers(question,sql_question,tables_info):
+    #print("col",tables_info["schemas"].values())
+    diversity_prompt = f"""
+    You are a question paraphrasing expert.
+    Original question: {question}
+    SQL query: {sql_question}
+    DATABASE TABLES Columns:
+    {tables_info["schemas"].values()}
+    
+    Create 3 variations of this question that would be answered by the same SQL query.
+    
+    Use these techniques from the reference table:
+    1. Simplify by hiding details
+    2. Simplify using synonyms (if need, you use get_synonym tool it retrun a list of synonyms)
+    3. Express in a different way
+    4. words in ' ' must not be modified  
+    4. Do not change TABLES Columns name
+    
+    Return your response as a list of 3 questions.
+    Make sure each variation preserves the original question meaning and would be answered by the provided SQL query.
+    """
+    return diversity_prompt
+
+
+""
 def get_prompt(tables_info, table_samples, library):
     """
     1. Generates a question_prompt string for an LLM to produce an SQL-relevant
@@ -20,7 +128,7 @@ SCHEMA FOR EACH TABLE:
 """
 
     sql_prompt = f"""
-You are an SQL **expert** translating natural language questions to SQL.
+You are an SQL **expert** translating natural language question to SQL.
 
 DATABASE TABLES:
 {', '.join(tables_info['tables'])}
@@ -60,17 +168,18 @@ SCHEMA FOR EACH TABLE:
 
     # -- Final instructions for the LLM to produce the question in natural language --
     question_prompt += """
-Using the database schema and sample data above, generate a clear and specific
-**natural language question** that can be answered using a single SQL query on this database.
+                    Using the database schema and sample data above(You Do NOT need to access the sample data provided in the task description), generate one clear and specific
+                    **natural language question**.
 
-IMPORTANT CRITERIA:
-1. The question should be specific enough to be translated into SQL.
-2. The question must have an answer in the database (based on the sample data).
-3. It should require only *one* SQL query to answer (JOINs allowed).
-4. Write it in plain, clear natural language without referencing code.
+                    IMPORTANT CRITERIA:
+                    1. The question should be specific enough to be translated into SQL.
+                    2. The question must have an answer in the database (based on the sample data) and do not test.
+                    3. Write it in plain, clear natural language without referencing code.
+                    4. Use the "retriever_tool" tool to validate the generated question.
+                    5. Finally retrun the natural language question.
 
-Return **only the question** (no explanations or extra formatting).
-"""
+                    Return **only the question** (no explanations or extra formatting).
+                    """
 
     return question_prompt, sql_prompt
 def get_extra_prompt_sql(sql_prompt, question):
@@ -80,14 +189,16 @@ def get_extra_prompt_sql(sql_prompt, question):
     """
     
     sql_prompt += f"""
-Question: {question}
+                Natural Language Question: {question}
 
-INSTRUCTION:
-Write a SINGLE valid SQL query that correctly answers this question using the
-database structure provided above. JOIN tables if needed.
+                INSTRUCTION:
+                Write a one SINGLE valid SQL query that correctly answers Natural Language Question using the
+                database structure provided above. JOIN tables if needed.
+                And you must use the "execute_sql" tool to check if the sql is valid.
+                Finally Return the valid SQL.
 
-RETURN ONLY the SQL query without explanations, commentary, or markdown formatting.
-"""
+                RETURN ONLY the SQL query without explanations, commentary, or markdown formatting.
+                """
     return sql_prompt
 
 def get_extra_prompt_divers(question, sql_question, tables_info):
@@ -119,7 +230,10 @@ Techniques to apply:
 3. Express it differently in terms of word order or phrasing.
 4. Maintain the essential meaning so the same SQL query still applies.
 5. Words in quotes ' ' must not be modified.
+6. Use 'get_synonym' tool to look online for synonyms if need.
+
 
 Return exactly 3 rephrased questions in a list-like format, no additional text.
 """
     return diversity_prompt
+""

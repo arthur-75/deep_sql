@@ -171,13 +171,14 @@ class ExecuteSQLTool(Tool):
     name = "execute_sql"
     description = (
         "Executes an SQL query (SQLite) to check if it's valid and returns results. "
-        "If an error occurs, the error message is returned as a string."
+        "SQL query input must be a string"
+        #"If an error occurs, the error message is returned as a string."
     )
 
     inputs = {
         "sql_query": {
             "type": "string",
-            "description": "The SQL query to execute."
+            "description": "The string SQL query code to execute."
         }
     }
     output_type = "string"  # Could be "object" or "string" depending on your framework
@@ -201,10 +202,11 @@ class ExecuteSQLTool(Tool):
             List[Tuple]: The raw results of the query. If an error occurs,
                          returns a single-element list with an error message tuple.
         """
+        assert isinstance(sql_query, str), "Your SQL query must be a string."
         cursor = self.conn.cursor()
         try:
             cursor.execute(sql_query)
-            return (cursor.fetchall())
+            return str(cursor.fetchall())
         except Exception as e:
             return f"Error executing SQL: {str(e)}"
 

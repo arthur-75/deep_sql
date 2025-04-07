@@ -38,14 +38,15 @@ class RetrieverTool(Tool):
     description = (
         "Checks semantic similarity of the input query against known queries in the knowledge base. "
         "If any retrieved query is too similar to the new query (score > gamma_max) or too different "
-        "(score < gamma_min), it raises ValueError. Otherwise, it returns an acceptance message."
+        "(score < gamma_min), it raises ValueError. Otherwise, it returns an acceptance message." \
+        "This input must be a string (query)"
     )
 
     inputs = {
         "query": {
             "type": "string",
             "description": (
-                "The query to check against the existing knowledge base. This input must be a string"
+                "The query to check against the existing knowledge base."
             ),
         }
     }
