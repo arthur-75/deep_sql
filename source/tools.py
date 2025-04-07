@@ -210,6 +210,7 @@ class ExecuteSQLTool(Tool):
         assert isinstance(sql_query, str), "Your SQL query must be a string."
         
         cursor = self.conn.cursor()
+        
         try:
             cursor.execute(sql_query)
             return str(cursor.fetchall())
