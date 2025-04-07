@@ -32,8 +32,6 @@ def embeddings_vector_store(model_name="Alibaba-NLP/gte-large-en-v1.5"):
 
 
 class RetrieverTool(Tool):
-
-
     name = "retriever_tool"
     description = (
         "Checks semantic similarity of the input question/query against known queries in the knowledge base. "

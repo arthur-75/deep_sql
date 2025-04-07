@@ -185,7 +185,6 @@ class ExecuteSQLTool(Tool):
     output_type = "string"  # Could be "object" or "string" depending on your framework
 
     def __init__(self, conn: sqlite3.Connection, **kwargs):
-        super().__init__(**kwargs)
         """
         Args:
             conn: A live sqlite3.Connection to the target database.
@@ -194,9 +193,10 @@ class ExecuteSQLTool(Tool):
         self.conn = conn
 
 
-
-
-    def forward(self, sql_query: str) -> str :
+    def forward(
+            self, 
+            sql_query: str
+            ) -> str :
         """
         Executes the provided SQL query and returns the results.
 
@@ -213,7 +213,10 @@ class ExecuteSQLTool(Tool):
         
         try:
             cursor.execute(sql_query)
-            print(str(cursor.fetchall()))
+            answ= cursor.fetchall()
+            print(str(answ),print(len(answ)))
+            
+            if len(answ)==0:raise ValueError(f"Wrong, no results it returns an empty list")
             return sql_query
         except Exception as e:
             return f"Error executing SQL: {str(e)} for the query: {sql_query}"

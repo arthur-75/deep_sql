@@ -12,19 +12,20 @@ from tools import get_synonym,ExecuteSQLTool,get_table
 from prompt import get_extra_prompt_divers,get_prompt,get_extra_prompt_sql
 
 from langchain_community.vectorstores import FAISS
-
+from datasets import load_dataset
 
 
 # Initialize model based on available API keys
 if not os.environ.get("OPENAI_API_KEY"):
     #model = HfApiModel()
-    model = LiteLLMModel(
+    model = LiteLLMModel(# qwen2.5:14b
         #deepseek-r1:14b /llama3.1:8b-instruct-fp16 ollama run qwq:32b-fp16
-    model_id="ollama_chat/llama3.1:8b-instruct-fp16", # This model is a bit weak for agentic behaviours though
+    model_id="ollama_chat/qwen2.5:14b", # This model is a bit weak for agentic behaviours though
     api_base="http://localhost:11434", # replace with 127.0.0.1:11434 or remote open-ai compatible server if necessary
     num_ctx=8192,device="mps" # ollama default is 2048 which will fail horribly. 8192 works for easy tasks, more is better. Check https://huggingface.co/spaces/NyxKrage/LLM-Model-VRAM-Calculator to calculate how much VRAM this will need for the selected model.
-    )   
-else:
+    ,   )   
+    model
+else: 
     model = OpenAIServerModel("gpt-4o")
 
 # Initialize the dataset library
@@ -98,7 +99,10 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         
         sql_query = sql_translator.run(sql_prompt)
         print(f"Generated SQL: {sql_query}")
-        validation_result=execute_sql(sql_query)
+        try :
+            validation_result=execute_sql(sql_query)
+        except Exception as e:
+            return f"Error executing SQL: {str(e)} for the query: {sql_query}"
         
         # 3. Validate the SQL query
 
@@ -113,7 +117,7 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         
         retriever_tool.vectordb.add_documents(documents=[Document(question)], ids=[str(uuid4())])
         entry.append({
-                "tables": tables_info['tables'],
+                "tables_id": tables_info['tables'],
                 "question": question,
                 "sql": sql_query,
                 "result": validation_result,
@@ -121,7 +125,7 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         for varaition in variations:
             retriever_tool.vectordb.add_documents(documents=[Document(varaition)], ids=[str(uuid4())])
             entry.append({
-                "tables": tables_info['tables'],
+                "tables_id": tables_info['tables'],
                 "question": varaition,
                 "sql": sql_query,
                 "result": validation_result #validation_result["results"],
@@ -183,14 +187,45 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
     
     print(f"Dataset generation complete. Final library size: {len(library)}")
 
+def get_table_sale(path:str=None):
+    # Load squall
+    if path is None:
+        file_path = "/Users/arthur/Documents/reasearch/deep_sql/data/squall.json"
 
+    with open(file_path, 'r') as json_file:
+        squall = json.load(json_file)
+
+    # Extract unique squall IDs
+    squall_ids = set(i["nt"] for i in squall)
+
+    # Load WTQ
+    wtq = load_dataset('wikitablequestions')
+    wtq_train = wtq["train"]
+
+    # Extract WTQ IDs
+    wtq_ids = set(wtq_train["id"])
+
+    # Get intersection of IDs
+    common_ids = list(squall_ids.intersection(wtq_ids))
+
+    # Mapping from ID to table for squall
+    squall_table_id_by_id = {entry["nt"]: entry["tbl"] for entry in squall if entry["nt"] in common_ids}
+
+    # Mapping from ID to table for wtq
+    wtq_table_by_id = {entry["id"]: entry["table"] for entry in wtq_train if entry["id"] in common_ids}
+
+    return squall_table_id_by_id, wtq_table_by_id, common_ids
     
 # Example usage
 if __name__ == "__main__":
-    #db_path = "../data/tables/db/{}.db"  # Path to the database file
-    db_path ="../data/tables/db/200_0.db"
-    num_entries = 10  # Number of entries to generate
-    
-    generate_dataset(db_path, num_entries)
+    squall_table_id_by_id, wtq_table_by_id, common_ids= get_table_sale()
+    for id0 in common_ids:
+        #id0 = common_ids[0] # salle 
+        file=squall_table_id_by_id[id0] #propre
+        db_path = f"../data/tables/db/{file}.db"  # Path to the database file
+        #db_path ="../data/tables/db/200_0.db"
+        num_entries = 10  # Number of entries to generate
+        print(file)
+        generate_dataset(db_path, num_entries)
 
 
