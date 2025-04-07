@@ -58,12 +58,12 @@ SCHEMA FOR EACH TABLE:
 
     # -- Final instructions for the LLM to produce the question in natural language --
     question_prompt += """
-                    Using the database schema and sample data above(You Do NOT need to access the sample data provided in the task description), generate a clear and specific
+                    Using the database schema and sample data above(You Do NOT have an access the sample data provided in the task description), generate a clear and specific
                     **natural language question**.
 
                     IMPORTANT CRITERIA:
                     1. The question should be specific enough to be translated into SQL.
-                    2. The question must have an answer in the database (based on the sample data).
+                    2. The question must have an answer in the database (based on the provided sample data in description above).
                     3. Write it in plain, clear natural language without referencing code.
                     4. You must use the "retriever_tool" tool to validate the generated question.
                     5. Finally retrun the natural language question.
