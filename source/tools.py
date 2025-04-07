@@ -191,7 +191,7 @@ class ExecuteSQLTool(Tool):
         super().__init__(**kwargs)  # Optional, for compatibility with base class
         self.conn = conn
 
-    def forward(self, sql_query: str) -> List[Tuple]:
+    def forward(self, sql_query: str) -> str :
         """
         Executes the provided SQL query and returns the results.
 
@@ -203,6 +203,7 @@ class ExecuteSQLTool(Tool):
                          returns a single-element list with an error message tuple.
         """
         assert isinstance(sql_query, str), "Your SQL query must be a string."
+        
         cursor = self.conn.cursor()
         try:
             cursor.execute(sql_query)
