@@ -165,9 +165,10 @@ def get_table_samples(conn: sqlite3.Connection, limit: int = 5) -> Dict[str, Any
 
 
 
-class ExecuteSQLTool(Tool):
-   
 
+
+
+class ExecuteSQLTool(Tool):
     name = "execute_sql"
     description = (
         "Executes an SQL query (SQLite) to check if it's valid and returns results. "
@@ -178,18 +179,22 @@ class ExecuteSQLTool(Tool):
     inputs = {
         "sql_query": {
             "type": "string",
-            "description": "The string SQL query code to execute."
+            "description": ("The string SQL query code to execute.")
         }
     }
     output_type = "string"  # Could be "object" or "string" depending on your framework
 
     def __init__(self, conn: sqlite3.Connection, **kwargs):
+        super().__init__(**kwargs)
         """
         Args:
             conn: A live sqlite3.Connection to the target database.
         """
         super().__init__(**kwargs)  # Optional, for compatibility with base class
         self.conn = conn
+
+
+
 
     def forward(self, sql_query: str) -> str :
         """
