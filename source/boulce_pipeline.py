@@ -102,13 +102,11 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         
         # 3. Validate the SQL query
 
-            
-        print(f"SQL validation successful! Found {validation_result} results.")
+        if "Error executing SQL" in str(validation_result) or len(validation_result)<3: continue
+        print(f"SQL validation successful! Found {validation_result} results.")  
         
-
         # 5. Generate question variations
         entry = []
-        if "Error executing SQL" in str(validation_result) or len(validation_result)<3: continue
         diversity_prompt=get_extra_prompt_divers(question,sql_query,tables_info)
         variations = question_diversity.run(diversity_prompt)
         print(f"Generated variations: {variations}")
