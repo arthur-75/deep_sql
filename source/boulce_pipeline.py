@@ -129,9 +129,6 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
                 "result": validation_result #validation_result["results"],
             })
 
-
-        
-        
         return entry
     
     # If we've exhausted all attempts

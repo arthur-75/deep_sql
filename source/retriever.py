@@ -25,7 +25,7 @@ def embeddings_vector_store(model_name="Alibaba-NLP/gte-large-en-v1.5"):
         index=index,
         docstore=InMemoryDocstore(),
         index_to_docstore_id={},
-        distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE,#EUCLIDEAN_DISTANCE MAX_INNER_PRODUCT
+        distance_strategy=DistanceStrategy.MAX_INNER_PRODUCT,#EUCLIDEAN_DISTANCE MAX_INNER_PRODUCT
     )
     return vector_store
 
