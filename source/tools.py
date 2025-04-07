@@ -1,9 +1,17 @@
 import requests
 from bs4 import BeautifulSoup
-from smolagents import tool
+from smolagents import tool,Tool
 import sqlite3
 from typing import Dict, List, Tuple, Any, Union, Optional
 
+
+
+def get_table(db_path):
+    conn = connect_to_database(db_path)
+    tables_info = get_tables_info(conn)
+    table_samples = get_random_table_samples(conn)
+
+    return conn,tables_info,table_samples
 
 @tool
 def get_synonym(word: str) -> str:
@@ -15,7 +23,7 @@ def get_synonym(word: str) -> str:
         word (str): The word for which synonyms are needed.
 
     Returns:
-        str: A comma-separated list of synonyms, or an error message if none are found.
+        list: list of synonyms, or an error message if none are found.
     """
     try:
         url = f'https://www.thesaurus.com/browse/{word}'
@@ -35,7 +43,7 @@ def get_synonym(word: str) -> str:
         if not strong_match:
             return "No synonyms available."
 
-        synonyms = ", ".join([i.text.strip() for i in strong_match])
+        synonyms = [i.text.strip() for i in strong_match]
         return synonyms
 
     except requests.exceptions.RequestException as e:
@@ -46,7 +54,6 @@ get_synonym("here")
 
 
 # Setup database connection
-@tool
 def connect_to_database(db_path: str) -> sqlite3.Connection:
     """
     Connect to the SQLite database and return connection object.
@@ -62,7 +69,6 @@ def connect_to_database(db_path: str) -> sqlite3.Connection:
 
 
 
-@tool
 def get_tables_info(conn: sqlite3.Connection) -> Dict[str, Any]:
     """
     Get all table names and their schemas from the database in a readable format.
@@ -103,8 +109,23 @@ def get_tables_info(conn: sqlite3.Connection) -> Dict[str, Any]:
     
     return {"tables": tables, "schemas": schemas}
 
+def get_random_table_samples(conn: sqlite3.Connection, limit: int = 10) -> Dict[str, Any]:
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = [table[0] for table in cursor.fetchall()]
+    
+    samples = {}
+    for table in tables:
+        try:
+            cursor.execute(f"SELECT * FROM {table} ORDER BY RANDOM() LIMIT {limit};")
+            columns = [desc[0] for desc in cursor.description]
+            rows = cursor.fetchall()
+            samples[table] = [dict(zip(columns, row)) for row in rows]
+        except Exception as e:
+            samples[table] = {"error": str(e)}
+    
+    return samples
 
-@tool
 def get_table_samples(conn: sqlite3.Connection, limit: int = 5) -> Dict[str, Any]:
     """
     Get sample rows from each table in the database in a readable format.
@@ -141,72 +162,49 @@ def get_table_samples(conn: sqlite3.Connection, limit: int = 5) -> Dict[str, Any
     
     return samples
 
-@tool
-def execute_sql(conn: sqlite3.Connection, sql_query: str) -> List[Tuple]:
-    """
-    Execute SQL query and return results.
-    
-    Args:
-        conn: SQLite database connection
-        sql_query: SQL query to execute
-    
-    Returns:
-        List of tuple results from the query
-    """
-    cursor = conn.cursor()
-    try:
-        cursor.execute(sql_query)
-        return cursor.fetchall()
-    except Exception as e:
-        return [(f"Error executing SQL: {str(e)}",)]
-    
 
-@tool
-def validate_sql_query(conn: sqlite3.Connection, sql_query: str) -> Dict[str, Any]:
-    """
-    Validate that an SQL query runs correctly and returns results.
-    
-    Args:
-        conn: SQLite database connection
-        sql_query: SQL query to validate
-    
-    Returns:
-        Dictionary with validation status and results or error message
-    """
-    cursor = conn.cursor()
-    try:
-        cursor.execute(sql_query)
-        results = cursor.fetchall()
-        
-        # Check if we got any results
-        if not results or len(results) == 0:
-            return {
-                "valid": False,
-                "error": "Query executed successfully but returned no results",
-                "results": []
-            }
-            
-        # Get column names for better readability
-        column_names = [description[0] for description in cursor.description]
-        
-        # Format results as list of dictionaries
-        formatted_results = []
-        for row in results:
-            formatted_row = {}
-            for i, value in enumerate(row):
-                formatted_row[column_names[i]] = value
-            formatted_results.append(formatted_row)
-        
-        return {
-            "valid": True,
-            "results": formatted_results,
-            "row_count": len(results),
-            "column_names": column_names
+
+
+class ExecuteSQLTool(Tool):
+   
+
+    name = "execute_sql"
+    description = (
+        "Executes an SQL query (SQLite) to check if it's valid and returns results. "
+        "If an error occurs, the error message is returned as a string."
+    )
+
+    inputs = {
+        "sql_query": {
+            "type": "string",
+            "description": "The SQL query to execute."
         }
-        
-    except Exception as e:
-        return {
-            "valid": False,
-            "error": str(e),
-            "results": []
-        }
+    }
+    output_type = "string"  # Could be "object" or "string" depending on your framework
+
+    def __init__(self, conn: sqlite3.Connection, **kwargs):
+        """
+        Args:
+            conn: A live sqlite3.Connection to the target database.
+        """
+        super().__init__(**kwargs)  # Optional, for compatibility with base class
+        self.conn = conn
+
+    def forward(self, sql_query: str) -> List[Tuple]:
+        """
+        Executes the provided SQL query and returns the results.
+
+        Args:
+            sql_query (str): The SQL query to run.
+
+        Returns:
+            List[Tuple]: The raw results of the query. If an error occurs,
+                         returns a single-element list with an error message tuple.
+        """
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute(sql_query)
+            return (cursor.fetchall())
+        except Exception as e:
+            return f"Error executing SQL: {str(e)}"
+

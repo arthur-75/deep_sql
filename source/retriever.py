@@ -31,22 +31,26 @@ def embeddings_vector_store(model_name="Alibaba-NLP/gte-large-en-v1.5"):
 
 
 
-class RetrieverTool(Tool): #Check if the new SQL query meets the similarity constraints.
-    name = "retriever"
-    description = "Using semantic similarity, retrieves some queries from the knowledge base that have the closest embeddings to the input query." \
-    "There are two thresholds gamma_max is activated if Retrieved queries are too similar to recent query and it raise ValueError" \
-    "gamma_min is activated if Retrieved queries are too different from recent query and it raise ValueError" \
-    "if return 'Query accepted.' you can return the generated query."
+class RetrieverTool(Tool):
+
+
+    name = "retriever_tool"
+    description = (
+        "Checks semantic similarity of the input query against known queries in the knowledge base. "
+        "If any retrieved query is too similar to the new query (score > gamma_max) or too different "
+        "(score < gamma_min), it raises ValueError. Otherwise, it returns an acceptance message."
+    )
 
     inputs = {
         "query": {
             "type": "string",
-            "description": "The query to perform. This should be semantically close to your target documents. Use the affirmative form rather than a question.",
+            "description": (
+                "The query to check against the existing knowledge base. This input must be a string"
+            ),
         }
     }
-    
     output_type = "string"
-    def __init__(self, vectordb: VectorStore, gamma_max: float = 0.9, gamma_min: float = 0.5, **kwargs):
+    def __init__(self, vectordb: VectorStore, gamma_max: float = 0.9, gamma_min: float = 0.4, **kwargs):
         super().__init__(**kwargs)
         self.vectordb = vectordb
         self.gamma_max= gamma_max
@@ -60,7 +64,7 @@ class RetrieverTool(Tool): #Check if the new SQL query meets the similarity cons
         assert isinstance(query, str), "Your search query must be a string."
 
         if not len(self.vectordb.index_to_docstore_id):
-            return (f'Query: "{query}" is accepted.')
+            return f'Query: "{query}" is accepted (no existing records).'
         # Perform similarity search with filter
         docs = self.vectordb.similarity_search_with_score(
             query=query,
@@ -82,7 +86,6 @@ class RetrieverTool(Tool): #Check if the new SQL query meets the similarity cons
         if doc_min:
             raise ValueError (f"Wrong, Retrieved queries are too different from recent query (Queries: {doc_min}) rewrite the question/query.")
         
-        return (f'Query: "{query}" is accepted.')
-
+        return f'Query: "{query}" is accepted (no existing records).'
 
 
