@@ -36,17 +36,17 @@ class RetrieverTool(Tool):
 
     name = "retriever_tool"
     description = (
-        "Checks semantic similarity of the input query against known queries in the knowledge base. "
-        "If any retrieved query is too similar to the new query (score > gamma_max) or too different "
-        "(score < gamma_min), it raises ValueError. Otherwise, it returns the query with an acceptance message." \
-        "This input must be a string (query)"
+        "Checks semantic similarity of the input question/query against known queries in the knowledge base. "
+        "If any retrieved question/query is too similar to the new question/query (score > gamma_max) or too different "
+        "(score < gamma_min), it automatically checks and raises ValueError (already built in). Otherwise, it returns the question/query with an acceptance message." \
+        "This input must be a string (question/query)"
     )
 
     inputs = {
-        "query": {
+        "question": {
             "type": "string",
             "description": (
-                "The query to check against the existing knowledge base."
+                "The question/query to check against the existing knowledge base."
             ),
         }
     }
@@ -59,16 +59,16 @@ class RetrieverTool(Tool):
 
     def forward(
         self,
-        query: str,
+        question: str,
     ) -> str:
         # Basic checks
-        assert isinstance(query, str), "Your search query must be a string."
+        assert isinstance(question, str), "Your search query must be a string."
 
         if not len(self.vectordb.index_to_docstore_id):
-            return f'Query: "{query}" is accepted (no existing records).'
+            return f'Question/Query: "{question}" is accepted (no existing records).'
         # Perform similarity search with filter
         docs = self.vectordb.similarity_search_with_score(
-            query=query,
+            query=question,
             k=5,
         )
 
@@ -82,11 +82,11 @@ class RetrieverTool(Tool):
 
         
         if doc_max:
-            raise ValueError(f"Wrong, Retrieved queries are too similar to recent query (Queries: {doc_max}) rewrite the question/query.")
+            raise ValueError(f"Wrong, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_max}) rewrite the question/query.")
     
         if doc_min:
-            raise ValueError (f"Wrong, Retrieved queries are too different from recent query (Queries: {doc_min}) rewrite the question/query.")
+            raise ValueError (f"Wrong, Retrieved queries are too different from recent question/query (Retrieved questions/queries  : {doc_min}) rewrite the question/query.")
         
-        return f'Query: "{query}" is accepted (no existing records).'
+        return f'Question/Query: "{question}" is accepted (no existing records).'
 
 

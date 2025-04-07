@@ -63,10 +63,11 @@ SCHEMA FOR EACH TABLE:
 
                     IMPORTANT CRITERIA:
                     1. The question should be specific enough to be translated into SQL.
-                    2. The question must have an answer in the database (based on the provided sample above don't code the table).
+                    2. The question must have an answer in the database based on the provided sample above 
+                    3. Don't code the table.
                     3. Write it in plain, clear natural language without referencing code.
-                    4. You must use the "retriever_tool" tool to validate the generated question.
-                    5. Finally retrun the natural language question.
+                    4. You must use the "retriever_tool" tool it validates the generated question for you. 
+                    5. Finally retrun the natural language question. final_answer(retriever_tool(question))
 
                     Return **only the question** (no explanations or extra formatting).
                     """
