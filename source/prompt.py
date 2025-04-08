@@ -67,7 +67,7 @@ SCHEMA FOR EACH TABLE:
                     3. Don't code the table.
                     3. Write it in plain, clear natural language without referencing code.
                     4. You must use the "retriever_tool" tool it validates the generated question for you. 
-                    5. Finally retrun the natural language question. final_answer(retriever_tool(question))
+                    5. Finally retrun the natural language question. "final_answer(retriever_tool(question))"
 
                     Return **only the question** (no explanations or extra formatting).
                     """
@@ -86,7 +86,7 @@ def get_extra_prompt_sql(sql_prompt, question):
                 Write a one SINGLE valid SQL query that correctly answers Natural Language Question using the
                 database structure provided above. JOIN tables if needed.
                 And you must use the "execute_sql" tool to check if the sql is valid.
-                Finally Return the valid SQL.
+                Finally Return the valid SQL. "final_answer(execute_sql(sql_query))"
 
                 RETURN ONLY the SQL query without explanations, commentary, or markdown formatting.
                 """
@@ -100,14 +100,73 @@ def get_extra_prompt_divers(question, sql_question, tables_info):
     """
 
     diversity_prompt = f"""
-You are a **question paraphrasing expert**.
+    You are a **question paraphrasing expert**.
 
-Original question: {question}
-Corresponding SQL query: {sql_question}
+    Original question: {question}
+    its Corresponding SQL query: {sql_question}
 
-DATABASE TABLES Columns:
-{tables_info["schemas"].values()}
+    DATABASE TABLES Columns:
+    {tables_info["schemas"].values()}
 
+
+        Your task is to create 7 different variants of the original question using the following techniques:
+
+    1. BASIC SIMPLIFICATION
+    • Remove non-essential elements while preserving the main meaning.
+    • Example: "Which club has the most female students as their members?" → "Which club has the most female students?"
+
+    2. SIMPLIFICATION BY HIDING DETAILS
+    • Preserve the central objective but remove additional explanations.
+    • Example: "What is the title and credits of the course that is taught in the largest classroom?" → "What course is taught in the biggest classroom and what are its credits?"
+
+    3. USING SYNONYMS
+    • Replace certain terms with their synonyms while maintaining meaning.
+    • Example: "What is the average duration in milliseconds of tracks that belong to Latin or Pop genre?" → "What is the mean length in milliseconds of Latin or Pop songs?"
+
+    4. SEMANTIC SUBSTITUTIONS
+    • Replace expressions with semantically equivalent alternatives.
+    • Example: "What are the locations that have gas stations owned by a company with a market value greater than 100?" → "Where are the gas stations owned by a company worth more than 100?"
+
+    5. COMPLETE REFORMULATION
+    • Express the same request in a totally different way.
+    • Example: "What is the number of routes operated by American Airlines whose destinations are in Italy?" → "How many routes does American Airlines have that fly to Italy?"
+
+    6. SIMPLIFICATION WITH MORE DIRECT LANGUAGE
+    • Use more direct and concise language.
+    • Example: "What are the names of body builders whose total score is higher than 300?" → "Who are the body builders with a score over 300?"
+
+    7. PARAPHRASE WITH CHANGE OF PERSPECTIVE
+    • Reformulate by changing the style or perspective of the question.
+    • Example: "Return the categories of music festivals that have the result 'Awarded'" → "List the categories of music festivals that have been recognized with awards"
+
+    For each original SQL question provided, please generate all 7 variants following these techniques without changing the sql request.
+    Make sure to keep the SQL query unchanged.
+
+    tools:
+    - Use 'get_synonym' tool to look online for synonyms if need.
+    - You must use the "retriever_tool" tool for each variation question to validate the generated question for you.
+
+    return a json array with the following format (no additional text):
+    [
+        {{
+            "question": "Variant 1",
+            "sql": "SQL Query"
+        }},
+        {{
+            "question": "Variant 2",
+            "sql": "SQL Query"
+        }},
+        ...
+        {{
+            "question": "Variant 7",
+            "sql": "SQL Query"
+        }}
+    ]
+    """
+    return diversity_prompt
+
+
+"""
 INSTRUCTION:
 - Create 3 alternative phrasings of the *original question* that would be answered
   by the same SQL query.
@@ -122,10 +181,12 @@ Techniques to apply:
 4. Maintain the essential meaning so the same SQL query still applies.
 5. Words in quotes ' ' must not be modified.
 6. Use 'get_synonym' tool to look online for synonyms if need.
-7. final_answer is the SQL query. final_answer(execute_sql(sql_query))
+7. You must use the "retriever_tool" tool for each variation question to validate the generated question for you.
+8. final_answer a list of 3 new generated questions. 
+
 
 
 Return exactly 3 rephrased questions in a list-like format, no additional text.
 """
-    return diversity_prompt
-""
+
+

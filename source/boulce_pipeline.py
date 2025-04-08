@@ -61,7 +61,7 @@ def create_agents(model,retriever_tool,execute_sql):
         ],
         name="question_generator",
         description="Generates a new database question based on schema and sample data",
-        additional_authorized_imports=["numpy"],
+        additional_authorized_imports=["numpy"],max_steps=10
     )
 
     sql_translator = CodeAgent(
@@ -69,21 +69,21 @@ def create_agents(model,retriever_tool,execute_sql):
         tools=[execute_sql],
         name="sql_translator", 
         description="Translates natural language questions into SQL queries",
-        additional_authorized_imports=["pandas","numpy","time"],#,"sqlite3"
+        additional_authorized_imports=["pandas","numpy","time"],max_steps=10#,"sqlite3"
     )
 
     question_diversity = CodeAgent(
         model=model,
-        tools=[get_synonym],
+        tools=[get_synonym,retriever_tool],
         name="question_diversity",
         description="Creates diverse variations of questions using different techniques",
-        additional_authorized_imports=["pandas","numpy","time"],
+        additional_authorized_imports=["pandas","numpy","time"],max_steps=10,
     )
     
     return question_generator, sql_translator, question_diversity
 
 
-def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, 
+def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_id:str,
                             question_generator, sql_translator, question_diversity,
                             retriever_tool,execute_sql, max_attempts: int = 5,)-> Optional[Dict[str, Any]]:
     """Run the full pipeline once to generate a dataset entry with validation"""
@@ -114,21 +114,26 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
         diversity_prompt=get_extra_prompt_divers(question,sql_query,tables_info)
         variations = question_diversity.run(diversity_prompt)
         print(f"Generated variations: {variations}")
-        
-        retriever_tool.vectordb.add_documents(documents=[Document(question)], ids=[str(uuid4())])
+        vector_id=str(uuid4())
+        retriever_tool.vectordb.add_documents(documents=[Document(question)], ids=[vector_id])
         entry.append({
-                "tables_id": tables_info['tables'],
+                "vector_id":vector_id,
+                "tables_id": table_id,
                 "question": question,
                 "sql": sql_query,
                 "result": validation_result,
+                "orginal":True
             })
         for varaition in variations:
-            retriever_tool.vectordb.add_documents(documents=[Document(varaition)], ids=[str(uuid4())])
+            vector_id=str(uuid4())
+            retriever_tool.vectordb.add_documents(documents=[Document(str(varaition["question"]))], ids=[vector_id])
             entry.append({
-                "tables_id": tables_info['tables'],
-                "question": varaition,
-                "sql": sql_query,
-                "result": validation_result #validation_result["results"],
+                "vector_id":vector_id,
+                "tables_id": table_id,
+                "question": varaition["question"],
+                "sql": varaition["sql"],
+                "result": validation_result, #validation_result["results"],
+                "orginal":False
             })
 
         return entry
@@ -139,7 +144,7 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str,
 
 
 # The main loop for dataset generation
-def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_dataset_library.json",vector_store_path='vector_store') -> None:
+def generate_dataset(db_path: str, table_id:str,num_entries: int, library_path: str = "sql_dataset_library.json",vector_store_path='vector_store') -> None:
     """
     Generate a dataset with the specified number of entries
     
@@ -168,7 +173,7 @@ def generate_dataset(db_path: str, num_entries: int, library_path: str = "sql_da
         progress_bar.set_description(f"Entry {len(library) + 1}")
         
         # Run one pipeline step
-        entries = run_pipeline_step(question_prompt,sql_prompt,tables_info, 
+        entries = run_pipeline_step(question_prompt,sql_prompt,tables_info, table_id,
                                     question_generator, sql_translator, question_diversity,
                                     retriever_tool,execute_sql)
         
@@ -219,13 +224,13 @@ def get_table_sale(path:str=None):
 # Example usage
 if __name__ == "__main__":
     squall_table_id_by_id, wtq_table_by_id, common_ids= get_table_sale()
-    for id0 in common_ids:
+    for table_id in common_ids:
         #id0 = common_ids[0] # salle 
-        file=squall_table_id_by_id[id0] #propre
+        file=squall_table_id_by_id[table_id] #propre
         db_path = f"../data/tables/db/{file}.db"  # Path to the database file
         #db_path ="../data/tables/db/200_0.db"
         num_entries = 10  # Number of entries to generate
         print(file)
-        generate_dataset(db_path, num_entries)
+        generate_dataset(db_path,table_id, num_entries)
 
 

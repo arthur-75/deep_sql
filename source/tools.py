@@ -214,7 +214,7 @@ class ExecuteSQLTool(Tool):
         try:
             cursor.execute(sql_query)
             answ= cursor.fetchall()
-            print(str(answ),print(len(answ)))
+            print(str(answ))
             
             if len(answ)==0:raise ValueError(f"Wrong, no results it returns an empty list")
             return sql_query
