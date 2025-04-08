@@ -166,27 +166,4 @@ def get_extra_prompt_divers(question, sql_question, tables_info):
     return diversity_prompt
 
 
-"""
-INSTRUCTION:
-- Create 3 alternative phrasings of the *original question* that would be answered
-  by the same SQL query.
-- Do NOT change any table or column names.
-- Use synonyms and rephrasings to vary the language, but preserve the question's meaning.
-- Return each variation as a separate line or list entry.
-
-Techniques to apply:
-1. Simplify by hiding or restructuring details (but keep the question accurate).
-2. Use synonyms or short paraphrases where possible.
-3. Express it differently in terms of word order or phrasing.
-4. Maintain the essential meaning so the same SQL query still applies.
-5. Words in quotes ' ' must not be modified.
-6. Use 'get_synonym' tool to look online for synonyms if need.
-7. You must use the "retriever_tool" tool for each variation question to validate the generated question for you.
-8. final_answer a list of 3 new generated questions. 
-
-
-
-Return exactly 3 rephrased questions in a list-like format, no additional text.
-"""
-
 

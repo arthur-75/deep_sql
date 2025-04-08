@@ -5,12 +5,12 @@ from tqdm import tqdm
 from smolagents import CodeAgent, HfApiModel, OpenAIServerModel,LiteLLMModel
 #from evaluate import load
 #bertscore = load("bertscore")
-from retriever import embeddings_vector_store,RetrieverTool,get_emebdding_model
+from retriever import RetrieverTool
 from uuid import uuid4
 from langchain_core.documents import Document
-from tools import get_synonym,ExecuteSQLTool,get_table
+from tools import get_synonym,ExecuteSQLTool
 from prompt import get_extra_prompt_divers,get_prompt,get_extra_prompt_sql
-
+from utils_main import get_table_dirty,get_table,init_library,save_library
 from langchain_community.vectorstores import FAISS
 from datasets import load_dataset
 
@@ -28,23 +28,7 @@ if not os.environ.get("OPENAI_API_KEY"):
 else: 
     model = OpenAIServerModel("gpt-4o")
 
-# Initialize the dataset library
-def init_library(library_path: str = "sql_dataset_library.json",vector_store_path='vector_store',model_name="Alibaba-NLP/gte-large-en-v1.5") -> List[Dict[str, Any]]:
-    """Initialize or load the existing library"""
-    if os.path.exists(library_path):
-        with open(library_path, 'r') as f:
-            library= json.load(f)
-        vector_store = FAISS.load_local(vector_store_path, embeddings=get_emebdding_model(model_name) , allow_dangerous_deserialization=True)
-        return library,vector_store
-   
-    return [],embeddings_vector_store(model_name)
 
-# Save the library to disk
-def save_library(library: List[Dict[str, Any]],vector_store,library_path: str = "sql_dataset_library.json", vector_store_path='vector_store',):
-    """Save the current library to disk"""
-    with open(library_path, 'w') as f:
-        json.dump(library, f, indent=2)
-    vector_store.save_local(vector_store_path)
    
 
 # Create the agents with access to appropriate tools
@@ -107,7 +91,7 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_
         # 3. Validate the SQL query
 
         if "Error executing SQL" in str(validation_result) or len(validation_result)<3: continue
-        print(f"SQL validation successful! Found {validation_result} results.")  
+        print(f"SQL validation successful! Found {str(validation_result)[:100]} results.")  
         
         # 5. Generate question variations
         entry = []
@@ -192,38 +176,10 @@ def generate_dataset(db_path: str, table_id:str,num_entries: int, library_path: 
     
     print(f"Dataset generation complete. Final library size: {len(library)}")
 
-def get_table_sale(path:str=None):
-    # Load squall
-    if path is None:
-        file_path = "/Users/arthur/Documents/reasearch/deep_sql/data/squall.json"
 
-    with open(file_path, 'r') as json_file:
-        squall = json.load(json_file)
-
-    # Extract unique squall IDs
-    squall_ids = set(i["nt"] for i in squall)
-
-    # Load WTQ
-    wtq = load_dataset('wikitablequestions')
-    wtq_train = wtq["train"]
-
-    # Extract WTQ IDs
-    wtq_ids = set(wtq_train["id"])
-
-    # Get intersection of IDs
-    common_ids = list(squall_ids.intersection(wtq_ids))
-
-    # Mapping from ID to table for squall
-    squall_table_id_by_id = {entry["nt"]: entry["tbl"] for entry in squall if entry["nt"] in common_ids}
-
-    # Mapping from ID to table for wtq
-    wtq_table_by_id = {entry["id"]: entry["table"] for entry in wtq_train if entry["id"] in common_ids}
-
-    return squall_table_id_by_id, wtq_table_by_id, common_ids
-    
 # Example usage
 if __name__ == "__main__":
-    squall_table_id_by_id, wtq_table_by_id, common_ids= get_table_sale()
+    squall_table_id_by_id, wtq_table_by_id, common_ids= get_table_dirty()
     for table_id in common_ids:
         #id0 = common_ids[0] # salle 
         file=squall_table_id_by_id[table_id] #propre
