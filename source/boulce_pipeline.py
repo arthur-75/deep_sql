@@ -84,8 +84,9 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_
         sql_query = sql_translator.run(sql_prompt)
         print(f"Generated SQL: {sql_query}")
         try :
-            validation_result=execute_sql(sql_query)
+            validation_result=execute_sql.execute_it(sql_query)
         except Exception as e:
+            validation_result='Error executing SQL"'
             return f"Error executing SQL: {str(e)} for the query: {sql_query}"
         
         # 3. Validate the SQL query

@@ -74,6 +74,18 @@ class ExecuteSQLTool(Tool):
         super().__init__(**kwargs)  # Optional, for compatibility with base class
         self.conn = conn
 
+    def execute_it(self,sql_query:str)-> str:
+        """
+        Executes the provided SQL query and returns the results. 
+        test before we add it to lib
+        """
+
+        assert isinstance(sql_query, str), "Your SQL query must be a string."
+        cursor = self.conn.cursor()
+        cursor.execute(sql_query)
+        return (cursor.fetchall())
+
+
 
     def forward(
             self, 
