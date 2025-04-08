@@ -87,7 +87,9 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_
             validation_result=execute_sql.execute_it(sql_query)
         except Exception as e:
             validation_result='Error executing SQL"'
-            return f"Error executing SQL: {str(e)} for the query: {sql_query}"
+            
+            print(f"Error executing SQL: {str(e)} for the query: {sql_query}")
+            continue
         
         # 3. Validate the SQL query
 
@@ -109,17 +111,23 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_
                 "result": validation_result,
                 "orginal":True
             })
-        for varaition in variations:
-            vector_id=str(uuid4())
-            retriever_tool.vectordb.add_documents(documents=[Document(str(varaition["question"]))], ids=[vector_id])
-            entry.append({
-                "vector_id":vector_id,
-                "tables_id": table_id,
-                "question": varaition["question"],
-                "sql": varaition["sql"],
-                "result": validation_result, #validation_result["results"],
-                "orginal":False
-            })
+        try:
+            for varaition in variations:
+                vector_id=str(uuid4())
+                retriever_tool.vectordb.add_documents(documents=[Document(str(varaition["question"]))], ids=[vector_id])
+                entry.append({
+                    "vector_id":vector_id,
+                    "tables_id": table_id,
+                    "question": varaition["question"],
+                    "sql": varaition["sql"],
+                    "result": validation_result, #validation_result["results"],
+                    "orginal":False
+                })
+        except Exception as e:
+            
+            
+            print(f"Error executing SQL: {str(e)} ")
+            continue
 
         return entry
     
