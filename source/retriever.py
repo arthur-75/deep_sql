@@ -54,12 +54,15 @@ class RetrieverTool(Tool):
         self.vectordb = vectordb
         self.gamma_max= gamma_max
         self.gamma_min= gamma_min
+        self.count = 0
 
     def forward(
         self,
         question: str,
     ) -> str:
         # Basic checks
+        #if isinstance(question, str):
+            #self.count2 +=1
         assert isinstance(question, str), "Your search query must be a string."
 
         if not len(self.vectordb.index_to_docstore_id):
@@ -84,6 +87,8 @@ class RetrieverTool(Tool):
         #    raise ValueError(f"Wrong for question: {question}, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_max}) rewrite the question/query.")
     
         if doc_min:
+            self.count +=1
+
             raise ValueError (f"Wrong for question: {question}, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_min}) rewrite the question/query.")
         
         print(f'Question/Query: "{question}" is accepted (no existing records).')

@@ -29,7 +29,6 @@ else:
     model = OpenAIServerModel("gpt-4o")
 
 
-   
 
 # Create the agents with access to appropriate tools
 def create_agents(model,retriever_tool,execute_sql):
@@ -189,6 +188,7 @@ def generate_dataset(db_path: str, table_id:str,num_entries: int, library_path: 
 # Example usage
 if __name__ == "__main__":
     squall_table_id_by_id, wtq_table_by_id, common_ids= get_table_dirty()
+    #results 
     for table_id in common_ids:
         #id0 = common_ids[0] # salle 
         file=squall_table_id_by_id[table_id] #propre
