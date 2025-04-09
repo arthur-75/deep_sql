@@ -54,7 +54,7 @@ class ExecuteSQLTool(Tool):
     name = "execute_sql"
     description = (
         "Executes an SQL query (SQLite) to check if it's valid and returns results. "
-        "SQL query input must be a string"
+        "SQL query input must be a string. If everything is good the output is the sql query."
         #"If an error occurs, the error message is returned as a string."
     )
 
@@ -108,9 +108,10 @@ class ExecuteSQLTool(Tool):
         try:
             cursor.execute(sql_query)
             answ= cursor.fetchall()
-            print(str(answ))
+            
             
             if len(answ)==0:raise ValueError(f"Wrong, no results it returns an empty list")
+            print(f"Good job. The sql query is accepted and the results are "+str(answ))
             return sql_query
         except Exception as e:
             return f"Error executing SQL: {str(e)} for the query: {sql_query}"
