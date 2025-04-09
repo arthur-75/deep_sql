@@ -55,7 +55,6 @@ class ExecuteSQLTool(Tool):
     description = (
         "Executes an SQL query (SQLite) to check if it's valid and returns results. "
         "SQL query input must be a string. If everything is good the output is the sql query."
-        #"If an error occurs, the error message is returned as a string."
     )
 
     inputs = {

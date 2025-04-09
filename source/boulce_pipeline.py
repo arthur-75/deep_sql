@@ -92,8 +92,10 @@ def run_pipeline_step(question_prompt:str,sql_prompt:str,tables_info:str, table_
         
         # 3. Validate the SQL query
 
-        if "Error executing SQL" in str(validation_result) or len(validation_result)<3: continue
-        print(f"SQL validation successful! Found {str(validation_result)[:100]} results.")  
+        if "Error executing SQL" in str(validation_result) or len(str(validation_result))<3:
+            print(f"Dose not work! Found {str(validation_result)[:100]} results.")
+            continue
+        print(f"SQL validation successful! Found {str(validation_result)[:100]} results.")
         
         # 5. Generate question variations
         entry = []
