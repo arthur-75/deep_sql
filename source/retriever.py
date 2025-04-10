@@ -18,14 +18,14 @@ def get_emebdding_model(model_name="Alibaba-NLP/gte-large-en-v1.5"):
 def embeddings_vector_store(model_name="Alibaba-NLP/gte-large-en-v1.5"):
     embeddings= get_emebdding_model(model_name)
    
-    index = faiss.IndexFlatL2(len(embeddings.embed_query("hello world")))
+    index = faiss.IndexFlatIP(len(embeddings.embed_query("hello world")))
 
     vector_store = FAISS(
         embedding_function=embeddings,
         index=index,
         docstore=InMemoryDocstore(),
         index_to_docstore_id={},
-        #distance_strategy=DistanceStrategy.MAX_INNER_PRODUCT,#EUCLIDEAN_DISTANCE MAX_INNER_PRODUCT
+        distance_strategy=DistanceStrategy.MAX_INNER_PRODUCT,#EUCLIDEAN_DISTANCE MAX_INNER_PRODUCT
     )
     return vector_store
 
@@ -79,17 +79,17 @@ class RetrieverTool(Tool):
             #print(doc[1],doc[0])
             if doc[1] > self.gamma_max:
                 doc_max.append(doc[0].page_content)
-            elif doc[1] < self.gamma_min:
-                doc_min.append(doc[0].page_content)
+            #if doc[1] < self.gamma_min:
+            #    doc_min.append(doc[0].page_content)
 
         
-        #if doc_max:
-        #    raise ValueError(f"Wrong for question: {question}, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_max}) rewrite the question/query.")
+        if doc_max:
+            raise ValueError(f"Wrong for question: {question}, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_max}) rewrite the question/query.")
     
-        if doc_min:
-            self.count +=1
+        #if doc_min:
+        #    self.count +=1
 
-            raise ValueError (f"Wrong for question: {question}, Retrieved queries are too similar to recent question/query (Retrieved questions/queries  : {doc_min}) rewrite the question/query.")
+        #    raise ValueError (f"Wrong for question: {question}, Retrieved queries are too diffrent to recent question/query (Retrieved questions/queries  : {doc_min}) rewrite the question/query.")
         
         print(f'Question/Query: "{question}" is accepted (no existing records).')
         return question
